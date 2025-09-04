@@ -1,8 +1,9 @@
+
 ---
 title: "A Site In Progress"
 ---
 
-\
+
 \
 \
 Hello, my name is Shahria but most people call me Shah. Welcome to my site! Here's a little bit about me.\
@@ -45,3 +46,6 @@ leaflet() |>
   addPopups(baruch_longitude, baruch_latitude, 
             "This is where I go to school ! <b>Baruch College</b>!")
 ```
+
+
+
