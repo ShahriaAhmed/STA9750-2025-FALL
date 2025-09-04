@@ -13,7 +13,15 @@ I'm a data scientist on Wall Street, working on AI development and testing in eq
 My current setup:
 
 -   Fujifilm X100V for travel photography, compactness and film recipes
--   Sony A7RIII + Zeiss 85mm lens for portraits and everything else\
+-   Sony A7RIII + Zeiss 85mm lens for portraits and everything else
+
+\
+Click the button below to go to my photography portfolio ↓
+
+<button type="button" class="btn btn-warning" onclick="window.location.href='https://koi-pics-eight.vercel.app/portfolio';">
+  Click to view 
+</button>
+\
 
 Thanks for visiting!
 
