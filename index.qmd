@@ -1,0 +1,49 @@
+---
+title: "A Site In Progress"
+---
+
+\
+\
+\
+Hello, my name is Shahria but most people call me Shah. Welcome to my site! Here's a little bit about me.\
+
+I'm a data scientist on Wall Street, working on AI development and testing in equity research. Currently I'm getting my Master's at CUNY Baruch. But in between work and school, I take a lot of pictures. Sunsets, cityscapes, portraits, nature, astrophotography — I love it all! My interest started back in school when I worked on an in-depth research report on Alzheimer's. It's a brutal and unforgiving disease with no cure. I wanted to remember all the things I've experienced when I became old, so I started taking pictures with my iPhone 6 at the time.
+
+My current setup:
+
+* Fujifilm X100V for travel photography, compactness and film recipes
+* Sony A7RIII + Zeiss 85mm lens for portraits and everything else \
+
+
+Thanks for visiting!
+
+
+
+```{r}
+#| include: false
+1+1
+```
+--------------
+Last Updated: `r format(Sys.time(), "%A %m %d, %Y at %H:%M%p")`
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+if(!require("leaflet")){
+    options(repos=c(CRAN="https://cloud.r-project.org"))
+    install.packages("leaflet")
+    stopifnot(require("leaflet"))
+}
+
+baruch_longitude <- -73.98333
+baruch_latitude  <- +40.75028
+
+leaflet() |>
+  addTiles() |>
+  setView(baruch_longitude, baruch_latitude, zoom=17) |>
+  addPopups(baruch_longitude, baruch_latitude, 
+            "This is where I go to school ! <b>Baruch College</b>!")
+```
