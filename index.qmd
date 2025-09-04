@@ -11,21 +11,19 @@ I'm a data scientist on Wall Street, working on AI development and testing in eq
 
 My current setup:
 
-* Fujifilm X100V for travel photography, compactness and film recipes
-* Sony A7RIII + Zeiss 85mm lens for portraits and everything else \
-
+-   Fujifilm X100V for travel photography, compactness and film recipes
+-   Sony A7RIII + Zeiss 85mm lens for portraits and everything else\
 
 Thanks for visiting!
-
-
 
 ```{r}
 #| include: false
 1+1
 ```
---------------
-Last Updated: `r format(Sys.time(), "%A %m %d, %Y at %H:%M%p")`
 
+------------------------------------------------------------------------
+
+Last Updated: `r format(Sys.time(), "%A %m %d, %Y at %H:%M%p")`
 
 ```{r}
 #| echo: false

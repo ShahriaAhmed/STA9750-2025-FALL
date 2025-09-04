@@ -10,7 +10,11 @@ website:
   navbar:
     background: primary
     search: false
-    
+    right:
+      - text: "Home"
+        href: index.qmd
+      - icon: github
+        href: https://github.com/ShahriaAhmed/STA9750-2025-FALL
 format:
   html:
     theme: brite

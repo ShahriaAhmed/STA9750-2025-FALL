@@ -1,0 +1,13 @@
+---
+title: "Current and Prior Projects"
+---
+
+\
+\
+\
+This is what I worked on for a while. It’s a basic IOS app using SpriteKit, modeled after Flappy Bird. My sprite was a Corgi because they're fat and chonks and I love them. \
+\
+
+<div style="text-align: center;">
+  <img src="images/corgijump.gif" width="300">
+</div>
