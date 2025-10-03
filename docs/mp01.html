@@ -283,13 +283,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(season_clean) <span class="sc">|&gt;</span></span>
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_weekly_hours =</span> <span class="fu">mean</span>(weekly_hours_viewed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="co">#get the average weekly hours</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">weeks_in_top10 =</span> <span class="fu">n</span>()</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">match</span>(season_clean, <span class="fu">c</span>(<span class="st">"Season 1"</span>, <span class="st">"Season 2"</span>, <span class="st">"Season 3"</span>, <span class="st">"Season 4"</span>, <span class="st">"None"</span>)))</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">#declare variable so i can insert back into text as dynamic variable values</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>season_stats <span class="ot">&lt;-</span> <span class="fu">setNames</span>(average_by_season<span class="sc">$</span>avg_weekly_hours, average_by_season<span class="sc">$</span>season_clean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">average_weekly_hours =</span> <span class="fu">mean</span>(weekly_hours_viewed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="co">#get the average weekly hours</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">match</span>(season_clean, <span class="fu">c</span>(<span class="st">"Season 1"</span>, <span class="st">"Season 2"</span>, <span class="st">"Season 3"</span>, <span class="st">"Season 4"</span>, <span class="st">"None"</span>)))</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#declare variable so i can insert back into text as dynamic variable values</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>season_stats <span class="ot">&lt;-</span> <span class="fu">setNames</span>(average_by_season<span class="sc">$</span>average_weekly_hours, average_by_season<span class="sc">$</span>season_clean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <ol start="4" type="1">
@@ -299,13 +298,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="do">##filter to see how many weeks stranger things spent in the global top 10</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>weeks_in_top10 <span class="ot">&lt;-</span> stranger_things_global <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>weeks_spent_in_top10 <span class="ot">&lt;-</span> stranger_things_global <span class="sc">|&gt;</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(season_title) <span class="sc">|&gt;</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">weeks_in_top10 =</span> <span class="fu">n</span>()</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">#summarize new variable declared</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>total_weeks_top10 <span class="ot">&lt;-</span> <span class="fu">sum</span>(weeks_in_top10<span class="sc">$</span>weeks_in_top10)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>total_weeks_top10 <span class="ot">&lt;-</span> <span class="fu">sum</span>(weeks_spent_in_top10<span class="sc">$</span>weeks_in_top10)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <ol start="5" type="1">
@@ -319,7 +318,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(show_title, <span class="st">"Stranger Things"</span>))</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#count number of unique countries the show debutted in the top 10 in</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>unique_countries <span class="ot">&lt;-</span> stranger_things_countries <span class="sc">|&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>unique_countries_count <span class="ot">&lt;-</span> stranger_things_countries <span class="sc">|&gt;</span></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">countries =</span> <span class="fu">n_distinct</span>(country_name)) <span class="sc">|&gt;</span></span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(countries)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
@@ -336,8 +335,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(show_title) <span class="sc">|&gt;</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_hours =</span> <span class="fu">sum</span>(weekly_hours_viewed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_weekly_hours =</span> <span class="fu">mean</span>(weekly_hours_viewed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">weeks_in_top10 =</span> <span class="fu">n</span>(),</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">average_weekly_hours =</span> <span class="fu">mean</span>(weekly_hours_viewed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">weeks_spent_in_top10 =</span> <span class="fu">n</span>(),</span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">seasons =</span> <span class="fu">n_distinct</span>(season_title)</span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(total_hours)) <span class="sc">|&gt;</span></span>
@@ -361,16 +360,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#declare variable to hold top shows, total hours and average hours. format all to show clean numbers</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>comparison_table <span class="ot">&lt;-</span> top_english_shows <span class="sc">|&gt;</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_hours_formatted =</span> <span class="fu">format</span>(total_hours, <span class="at">big.mark =</span> <span class="st">","</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>),</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_weekly_hours_formatted =</span> <span class="fu">format</span>(<span class="fu">round</span>(mean_weekly_hours), <span class="at">big.mark =</span> <span class="st">","</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_hours =</span> <span class="fu">format</span>(total_hours, <span class="at">big.mark =</span> <span class="st">","</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">average_weekly_hours =</span> <span class="fu">format</span>(<span class="fu">round</span>(average_weekly_hours), <span class="at">big.mark =</span> <span class="st">","</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>),</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">show_title_display =</span> show_title</span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">#set column and corresponding values</span></span>
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">Show =</span> show_title_display, </span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Total Hours</span><span class="st">`</span> <span class="ot">=</span> total_hours_formatted,</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Average Weekly Hours</span><span class="st">`</span> <span class="ot">=</span> mean_weekly_hours_formatted,</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Weeks in Top 10</span><span class="st">`</span> <span class="ot">=</span> weeks_in_top10,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Total Hours</span><span class="st">`</span> <span class="ot">=</span> total_hours,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Average Weekly Hours</span><span class="st">`</span> <span class="ot">=</span> average_weekly_hours,</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Weeks in Top 10</span><span class="st">`</span> <span class="ot">=</span> weeks_spent_in_top10,</span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">Seasons =</span> seasons</span>
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
@@ -388,8 +387,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
-<div class="datatables html-widget html-fill-item" id="htmlwidget-8ce97282097a3ae27216" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-8ce97282097a3ae27216">{"x":{"filter":"none","vertical":false,"data":[["Stranger Things","Wednesday","Bridgerton","Ginny & Georgia","You","Manifest","Love Is Blind","The Night Agent","Outer Banks","Virgin River","The Witcher","Emily in Paris","Cobra Kai","DAHMER","The Lincoln Lawyer"],["2,967,980,000","2,387,950,000","2,279,710,000","1,556,880,000","1,542,990,000","1,320,520,000","1,311,300,000","1,307,720,000","1,275,610,000","1,135,110,000","1,117,900,000","1,015,800,000","  963,960,000","  962,470,000","  903,270,000"],[" 59,359,600"," 82,343,103"," 46,524,694"," 57,662,222"," 40,605,000"," 25,892,549"," 35,440,541"," 62,272,381"," 39,862,812"," 37,837,000"," 48,604,348"," 37,622,222"," 40,165,000","137,495,714"," 34,741,154"],[50,29,49,27,38,51,37,21,32,30,23,27,24,7,26],[4,2,3,3,5,4,8,2,4,6,3,4,6,1,3]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Show<\/th>\n      <th>Total Hours<\/th>\n      <th>Average Weekly Hours<\/th>\n      <th>Weeks in Top 10<\/th>\n      <th>Seasons<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":15,"dom":"t","columnDefs":[{"className":"dt-right","targets":[3,4]},{"name":"Show","targets":0},{"name":"Total Hours","targets":1},{"name":"Average Weekly Hours","targets":2},{"name":"Weeks in Top 10","targets":3},{"name":"Seasons","targets":4}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[10,15,25,50,100],"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[0]; $(row).css({'background-color':value == \"Stranger Things\" ? \"#ffebee\" : null});\n}"}},"evals":["options.rowCallback"],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-4f51d74558ed94d49a02" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-4f51d74558ed94d49a02">{"x":{"filter":"none","vertical":false,"data":[["Stranger Things","Wednesday","Bridgerton","Ginny & Georgia","You","Manifest","Love Is Blind","The Night Agent","Outer Banks","Virgin River","The Witcher","Emily in Paris","Cobra Kai","DAHMER","The Lincoln Lawyer"],["2,967,980,000","2,387,950,000","2,279,710,000","1,556,880,000","1,542,990,000","1,320,520,000","1,311,300,000","1,307,720,000","1,275,610,000","1,135,110,000","1,117,900,000","1,015,800,000","  963,960,000","  962,470,000","  903,270,000"],[" 59,359,600"," 82,343,103"," 46,524,694"," 57,662,222"," 40,605,000"," 25,892,549"," 35,440,541"," 62,272,381"," 39,862,812"," 37,837,000"," 48,604,348"," 37,622,222"," 40,165,000","137,495,714"," 34,741,154"],[50,29,49,27,38,51,37,21,32,30,23,27,24,7,26],[4,2,3,3,5,4,8,2,4,6,3,4,6,1,3]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Show<\/th>\n      <th>Total Hours<\/th>\n      <th>Average Weekly Hours<\/th>\n      <th>Weeks in Top 10<\/th>\n      <th>Seasons<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":15,"dom":"t","columnDefs":[{"className":"dt-right","targets":[3,4]},{"name":"Show","targets":0},{"name":"Total Hours","targets":1},{"name":"Average Weekly Hours","targets":2},{"name":"Weeks in Top 10","targets":3},{"name":"Seasons","targets":4}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[10,15,25,50,100],"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[0]; $(row).css({'background-color':value == \"Stranger Things\" ? \"#ffebee\" : null});\n}"}},"evals":["options.rowCallback"],"jsHooks":[]}</script>
 </div>
 </div>
 <div class="cell">
@@ -489,13 +488,12 @@ Did you know Bollywood is the largest producer of films in the world? In a lot o
 <span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
 <span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_weekly_views =</span> <span class="fu">sum</span>(weekly_views, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_weekly_hours =</span> <span class="fu">sum</span>(weekly_hours_viewed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_weekly_views =</span> <span class="fu">mean</span>(weekly_views, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_entries =</span> <span class="fu">n</span>(),</span>
-<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">unique_shows =</span> <span class="fu">n_distinct</span>(show_title)) <span class="sc">%&gt;%</span></span>
-<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(year)</span>
-<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="co">#divide the total weekly views by 21 hours per week to get an estimate of users. Commented out below bc it shows up on the code block          </span></span>
-<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a><span class="co">#yearly_summary$total_weekly_views/21           </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">average_weekly_views =</span> <span class="fu">mean</span>(weekly_views, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">unique_shows =</span> <span class="fu">n_distinct</span>(show_title)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(year)</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a><span class="co">#divide the total weekly views by 21 hours per week to get an estimate of users. Commented out below bc it shows up on the code block          </span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="co">#yearly_summary$total_weekly_views/21           </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
@@ -514,8 +512,7 @@ One of the strengths of operating globally and not being subject to borders is t
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(category, year) <span class="sc">%&gt;%</span></span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_weekly_hours =</span> <span class="fu">sum</span>(weekly_hours_viewed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">average_weekly_hours =</span> <span class="fu">mean</span>(weekly_hours_viewed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">weeks_in_data =</span> <span class="fu">n</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">average_weekly_hours =</span> <span class="fu">mean</span>(weekly_hours_viewed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'category'. You can override using the
@@ -576,7 +573,7 @@ One of the strengths of operating globally and not being subject to borders is t
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">year</span>(week)) <span class="sc">%&gt;%</span></span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(category, year) <span class="sc">%&gt;%</span></span>
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">unique_titles =</span> <span class="fu">n_distinct</span>(show_title)) <span class="sc">%&gt;%</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">unique_names =</span> <span class="fu">n_distinct</span>(show_title)) <span class="sc">%&gt;%</span></span>
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(year, category)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stderr">
@@ -597,8 +594,8 @@ One of the strengths of operating globally and not being subject to borders is t
 <span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  ) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
-<div class="datatables html-widget html-fill-item" id="htmlwidget-cebc0f184f12f5fdadd8" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-cebc0f184f12f5fdadd8">{"x":{"filter":"none","vertical":false,"data":[["TV (English)","TV (Non-English)","TV (English)","TV (Non-English)","TV (English)","TV (Non-English)","TV (English)","TV (Non-English)","TV (English)","TV (Non-English)"],[2021,2021,2022,2022,2023,2023,2024,2024,2025,2025],[68,63,132,130,163,154,175,169,109,117]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Category<\/th>\n      <th>Year<\/th>\n      <th>Unique Releases<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":15,"dom":"t","columnDefs":[{"className":"dt-right","targets":[1,2]},{"name":"category","targets":0},{"name":"year","targets":1},{"name":"unique_titles","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[10,15,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-6bb83d049a6f1cd6919e" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-6bb83d049a6f1cd6919e">{"x":{"filter":"none","vertical":false,"data":[["TV (English)","TV (Non-English)","TV (English)","TV (Non-English)","TV (English)","TV (Non-English)","TV (English)","TV (Non-English)","TV (English)","TV (Non-English)"],[2021,2021,2022,2022,2023,2023,2024,2024,2025,2025],[68,63,132,130,163,154,175,169,109,117]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Category<\/th>\n      <th>Year<\/th>\n      <th>Unique Releases<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":15,"dom":"t","columnDefs":[{"className":"dt-right","targets":[1,2]},{"name":"category","targets":0},{"name":"year","targets":1},{"name":"unique_names","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[10,15,25,50,100]}},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 </section>
@@ -668,8 +665,8 @@ One of the strengths of operating globally and not being subject to borders is t
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">formatCurrency</span>(<span class="st">'total_hours'</span>, <span class="st">''</span>, <span class="at">interval =</span> <span class="dv">3</span>,<span class="at">digits=</span><span class="dv">0</span>, <span class="at">mark =</span> <span class="st">','</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
-<div class="datatables html-widget html-fill-item" id="htmlwidget-7f020a65a4417224f794" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-7f020a65a4417224f794">{"x":{"filter":"none","vertical":false,"data":[["TV (Non-English)","TV (English)","Films (English)","Films (Non-English)"],["Squid Game","Stranger Things","Red Notice","Society of the Snow"],[5048300000,2967980000,453990000,235900000]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Category<\/th>\n      <th>Show Title<\/th>\n      <th>Total Hours<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":10,"dom":"t","columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-right","targets":2},{"name":"category","targets":0},{"name":"show_title","targets":1},{"name":"total_hours","targets":2}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":["options.columnDefs.0.render"],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-1435cbf34420dd5141cd" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-1435cbf34420dd5141cd">{"x":{"filter":"none","vertical":false,"data":[["TV (Non-English)","TV (English)","Films (English)","Films (Non-English)"],["Squid Game","Stranger Things","Red Notice","Society of the Snow"],[5048300000,2967980000,453990000,235900000]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Category<\/th>\n      <th>Show Title<\/th>\n      <th>Total Hours<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":10,"dom":"t","columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-right","targets":2},{"name":"category","targets":0},{"name":"show_title","targets":1},{"name":"total_hours","targets":2}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":["options.columnDefs.0.render"],"jsHooks":[]}</script>
 </div>
 </div>
 <p><br>

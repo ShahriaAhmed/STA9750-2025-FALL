@@ -114,12 +114,11 @@ average_by_season <- stranger_things_global |>
   ) |>
   group_by(season_clean) |>
   summarise(
-    avg_weekly_hours = mean(weekly_hours_viewed, na.rm = TRUE),
-    weeks_in_top10 = n()
+    average_weekly_hours = mean(weekly_hours_viewed, na.rm = TRUE)
   ) |>
   arrange(match(season_clean, c("Season 1", "Season 2", "Season 3", "Season 4", "None")))
 
-season_stats <- setNames(average_by_season$avg_weekly_hours, average_by_season$season_clean)
+season_stats <- setNames(average_by_season$average_weekly_hours, average_by_season$season_clean)
 ```
 3. Unprecedented seasonal viewership! Can it break even more records with Season 5??
 
@@ -145,25 +144,24 @@ average_by_season <- stranger_things_global |>
   ) |>
   group_by(season_clean) |>
   summarise(
-    avg_weekly_hours = mean(weekly_hours_viewed, na.rm = TRUE), #get the average weekly hours
-    weeks_in_top10 = n()
-  ) |>
+    average_weekly_hours = mean(weekly_hours_viewed, na.rm = TRUE), #get the average weekly hours
+) |>
   arrange(match(season_clean, c("Season 1", "Season 2", "Season 3", "Season 4", "None")))
 
 #declare variable so i can insert back into text as dynamic variable values
-season_stats <- setNames(average_by_season$avg_weekly_hours, average_by_season$season_clean)
+season_stats <- setNames(average_by_season$average_weekly_hours, average_by_season$season_clean)
 ```
 
 ```{r stranger things weeks-top10 setup}
 #| echo: true
 #| include: false
 
-weeks_in_top10 <- stranger_things_global |>
+weeks_spent_in_top10 <- stranger_things_global |>
   group_by(season_title) |>
   summarise(
     weeks_in_top10 = n()
   )
-total_weeks_top10 <- sum(weeks_in_top10$weeks_in_top10)
+total_weeks_top10 <- sum(weeks_spent_in_top10$weeks_in_top10)
 ```
 4. **`r format(total_weeks_top10, big.mark = ",")`** Weeks in top 10 across all seasons. That's almost an entire year!
 ```{r stranger things weeks-top10 show calculation}
@@ -171,13 +169,13 @@ total_weeks_top10 <- sum(weeks_in_top10$weeks_in_top10)
 #| code-summary: "Show code"
 
 ##filter to see how many weeks stranger things spent in the global top 10
-weeks_in_top10 <- stranger_things_global |>
+weeks_spent_in_top10 <- stranger_things_global |>
   group_by(season_title) |>
   summarise(
     weeks_in_top10 = n()
   )
 #summarize new variable declared
-total_weeks_top10 <- sum(weeks_in_top10$weeks_in_top10)
+total_weeks_top10 <- sum(weeks_spent_in_top10$weeks_in_top10)
 ```
 
 ```{r stranger things multinational-appeal setup code}
@@ -187,11 +185,11 @@ total_weeks_top10 <- sum(weeks_in_top10$weeks_in_top10)
 stranger_things_countries <- COUNTRY_TOP_10 |>
   filter(str_detect(show_title, "Stranger Things"))
 
-unique_countries <- stranger_things_countries |>
+unique_countries_count <- stranger_things_countries |>
   summarise(countries = n_distinct(country_name)) |>
   pull(countries)
 ```
-5. Lets go *global*: Stranger Things appeared in the top 10 for **`r format(unique_countries, big.mark = ",")`** countries
+5. Lets go *global*: Stranger Things appeared in the top 10 for **`r format(unique_countries_count, big.mark = ",")`** countries
 ```{r stranger things multinational-appeal show code}
 #| code-fold: true
 #| code-summary: "Show code"
@@ -201,7 +199,7 @@ stranger_things_countries <- COUNTRY_TOP_10 |>
   filter(str_detect(show_title, "Stranger Things"))
 
 #count number of unique countries the show debutted in the top 10 in
-unique_countries <- stranger_things_countries |>
+unique_countries_count <- stranger_things_countries |>
   summarise(countries = n_distinct(country_name)) |>
   pull(countries)
 ```
@@ -216,8 +214,8 @@ top_english_shows <- GLOBAL_TOP_10 |>
   group_by(show_title) |>
   summarise(
     total_hours = sum(weekly_hours_viewed, na.rm = TRUE),
-    mean_weekly_hours = mean(weekly_hours_viewed, na.rm = TRUE),
-    weeks_in_top10 = n(),
+    average_weekly_hours = mean(weekly_hours_viewed, na.rm = TRUE),
+    weeks_spent_in_top10 = n(),
     seasons = n_distinct(season_title)
   ) |>
   arrange(desc(total_hours)) |>
@@ -241,16 +239,16 @@ st_total_hours <- top_english_shows |>
 #declare variable to hold top shows, total hours and average hours. format all to show clean numbers
 comparison_table <- top_english_shows |>
   mutate(
-    total_hours_formatted = format(total_hours, big.mark = ",", scientific = FALSE),
-    mean_weekly_hours_formatted = format(round(mean_weekly_hours), big.mark = ",", scientific = FALSE),
+    total_hours = format(total_hours, big.mark = ",", scientific = FALSE),
+    average_weekly_hours = format(round(average_weekly_hours), big.mark = ",", scientific = FALSE),
     show_title_display = show_title
   ) |>
   select(
     #set column and corresponding values
     Show = show_title_display, 
-    `Total Hours` = total_hours_formatted,
-    `Average Weekly Hours` = mean_weekly_hours_formatted,
-    `Weeks in Top 10` = weeks_in_top10,
+    `Total Hours` = total_hours,
+    `Average Weekly Hours` = average_weekly_hours,
+    `Weeks in Top 10` = weeks_spent_in_top10,
     Seasons = seasons
   )
 
@@ -394,8 +392,7 @@ yearly_summary <- joined_data %>%
   summarise(
     total_weekly_views = sum(weekly_views, na.rm = TRUE),
     total_weekly_hours = sum(weekly_hours_viewed, na.rm = TRUE),
-    avg_weekly_views = mean(weekly_views, na.rm = TRUE),
-    total_entries = n(),
+    average_weekly_views = mean(weekly_views, na.rm = TRUE),
     unique_shows = n_distinct(show_title)) %>%
   arrange(year)
 
@@ -419,8 +416,7 @@ categories_by_year <- GLOBAL_TOP_10 %>%
   group_by(category, year) %>%
   summarise(
     total_weekly_hours = sum(weekly_hours_viewed, na.rm = TRUE),
-    average_weekly_hours = mean(weekly_hours_viewed, na.rm = TRUE),
-    weeks_in_data = n())
+    average_weekly_hours = mean(weekly_hours_viewed, na.rm = TRUE))
 
 #plot average hours viewed by week, assigning colors to each product category
 ggplot(categories_by_year, aes(x = year, y = average_weekly_hours/1000000, color = category)) +
@@ -463,7 +459,7 @@ titles_by_year_category <- GLOBAL_TOP_10 %>%
   mutate(year = year(week)) %>%
   group_by(category, year) %>%
   summarise(
-    unique_titles = n_distinct(show_title)) %>%
+    unique_names = n_distinct(show_title)) %>%
   arrange(year, category)
 
 #show count in a clean table
