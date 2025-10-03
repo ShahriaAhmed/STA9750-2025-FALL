@@ -678,7 +678,7 @@ tv_debut_countries <- COUNTRY_TOP_10 |>
   filter(str_detect(category, "TV")) |>
   group_by(show_title) |>
   filter(week == min(week)) |>
-  summarise(countries_count = n_distinct(country_name), .groups = "drop") |>
+  summarise(countries_count = n_distinct(country_name)) |>
   arrange(desc(countries_count))
 
 print(tv_debut_countries)
