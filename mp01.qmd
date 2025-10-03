@@ -109,7 +109,7 @@ average_by_season <- stranger_things_global |>
       str_detect(season_title, "Season 3") | str_detect(season_title, "Stranger Things 3") ~ "Season 3", 
       str_detect(season_title, "Season 2") | str_detect(season_title, "Stranger Things 2") ~ "Season 2",
       is.na(season_title) ~ "Season 1",
-      TRUE ~ "Season Unknown"
+      TRUE ~ "None"
     )
   ) |>
   group_by(season_clean) |>
@@ -117,7 +117,7 @@ average_by_season <- stranger_things_global |>
     avg_weekly_hours = mean(weekly_hours_viewed, na.rm = TRUE),
     weeks_in_top10 = n()
   ) |>
-  arrange(match(season_clean, c("Season 1", "Season 2", "Season 3", "Season 4", "Season Unknown")))
+  arrange(match(season_clean, c("Season 1", "Season 2", "Season 3", "Season 4", "None")))
 
 season_stats <- setNames(average_by_season$avg_weekly_hours, average_by_season$season_clean)
 ```
@@ -140,7 +140,7 @@ average_by_season <- stranger_things_global |>
       str_detect(season_title, "Season 3") | str_detect(season_title, "Stranger Things 3") ~ "Season 3", 
       str_detect(season_title, "Season 2") | str_detect(season_title, "Stranger Things 2") ~ "Season 2",
       is.na(season_title) ~ "Season 1",
-      TRUE ~ "None"
+      TRUE ~ "None" #if it's missing a season name, keep it as none
     )
   ) |>
   group_by(season_clean) |>
@@ -176,6 +176,7 @@ weeks_in_top10 <- stranger_things_global |>
   summarise(
     weeks_in_top10 = n()
   )
+#summarize new variable declared
 total_weeks_top10 <- sum(weeks_in_top10$weeks_in_top10)
 ```
 
@@ -209,7 +210,7 @@ unique_countries <- stranger_things_countries |>
 #| code-fold: true
 #| code-summary: "Show code"
 
-#filter for english shows in the global df
+#filter for english shows in the global df, get total hours and average hours viewed, get weeks spent in top 10
 top_english_shows <- GLOBAL_TOP_10 |>
   filter(category == "TV (English)") |>
   group_by(show_title) |>
@@ -227,6 +228,7 @@ top_english_shows <- top_english_shows |>
     is_stranger_things = str_detect(show_title, "Stranger Things")
   )
 
+#return total hours for stranger things and store in new variable
 st_total_hours <- top_english_shows |>
   filter(is_stranger_things) |>
   pull(total_hours)
@@ -236,7 +238,7 @@ st_total_hours <- top_english_shows |>
 #| echo: true
 #| warning: false
 #
-
+#declare variable to hold top shows, total hours and average hours. format all to show clean numbers
 comparison_table <- top_english_shows |>
   mutate(
     total_hours_formatted = format(total_hours, big.mark = ",", scientific = FALSE),
@@ -244,14 +246,15 @@ comparison_table <- top_english_shows |>
     show_title_display = show_title
   ) |>
   select(
-    Show = show_title_display,
+    #set column and corresponding values
+    Show = show_title_display, 
     `Total Hours` = total_hours_formatted,
     `Average Weekly Hours` = mean_weekly_hours_formatted,
     `Weeks in Top 10` = weeks_in_top10,
     Seasons = seasons
   )
 
-#create table to show shows
+#create table to show shows and put it all together
 comparison_table |>
   DT::datatable(
     options = list(pageLength = 15, dom = 't'),
@@ -277,9 +280,10 @@ top_english_shows |>
              y = total_hours,
              fill = is_stranger_things)) +
   geom_col(alpha = 0.8) +
-  scale_fill_manual(values = c("FALSE" = "#666666", "TRUE" = "#E50914")) +
+  scale_fill_manual(values = c("FALSE" = "#666666", "TRUE" = "#E50914")) + 
   coord_flip() +
   labs(
+    #title and y axis labels
     title = "Netflix Top English TV Shows, Total Viewership",
     y = "Total Hours Viewed",
  ) +
@@ -409,7 +413,7 @@ We can see that average viewership for non-English films has largely remained st
 #| code-fold: true
 #| code-summary: "Show code"
 
-#sum and average the weeekly hours viewed
+#sum and average the weeekly hours viewed and store in new variable
 categories_by_year <- GLOBAL_TOP_10 %>%
   mutate(year = year(week)) %>%  
   group_by(category, year) %>%
@@ -418,7 +422,7 @@ categories_by_year <- GLOBAL_TOP_10 %>%
     average_weekly_hours = mean(weekly_hours_viewed, na.rm = TRUE),
     weeks_in_data = n())
 
-#plot average hours viewed by week
+#plot average hours viewed by week, assigning colors to each product category
 ggplot(categories_by_year, aes(x = year, y = average_weekly_hours/1000000, color = category)) +
   geom_line(size = 2) +
   geom_point(size = 3) +
@@ -429,12 +433,14 @@ ggplot(categories_by_year, aes(x = year, y = average_weekly_hours/1000000, color
     "TV (Non-English)" = "#666666"
   )) +
   labs(
+    #add title, axis labels
     title = "Netflix Content Quality by Category Over Time", 
     x = "Year",
     y = "Average Weekly Hours In Millions",
     color = "Category",
 
   ) +
+  ##adjust scale of graph so it doesn't ruin entire page
   scale_y_continuous(labels = comma_format()) +
   scale_x_continuous(breaks = scales::pretty_breaks()) +
   theme_minimal() +
@@ -460,6 +466,7 @@ titles_by_year_category <- GLOBAL_TOP_10 %>%
     unique_titles = n_distinct(show_title)) %>%
   arrange(year, category)
 
+#show count in a clean table
 titles_by_year_category |>
   DT::datatable(
     options = list(
@@ -536,7 +543,7 @@ top_show_by_category %>%
 #| code-fold: true
 #| code-summary: "Show code"
  
-#filter for top show by category and sum total hours
+#filter for top show by category and sum total hours. sort by total hours, return only one value per category
 top_show_by_category <- GLOBAL_TOP_10 %>%
   group_by(category, show_title) %>%
   summarise(
@@ -561,7 +568,8 @@ top_show_by_category %>%
 ```{r exploratory data analysis 5 calculations}
 #| code-fold: true
 #| code-summary: "Show code"
-#| 
+
+#filter out for only tv shows in the country top 10. aggregate by the most number of weeks spent in top 10
 longest_run_tv <- COUNTRY_TOP_10 %>%
   filter(category %in% c("TV", "TV (English)", "TV (Non-English)")) %>%
   group_by(country_name, show_title, season_title) %>%
@@ -593,15 +601,13 @@ country_weeks <- COUNTRY_TOP_10 |>
 #| code-summary: "Show code"
 #| results: hide
 
-#summarize total views and total hours viewed
+#summarize total views and total hours viewed for squid games
 squid_game_total <- GLOBAL_TOP_10 %>%
   filter(str_detect(show_title, "Squid Game")) %>%
   summarise(
     total_hours_viewed = sum(weekly_hours_viewed, na.rm = TRUE),
     total_views = sum(weekly_views, na.rm = TRUE)
   )
-
-print("\nTotal Squid Game Viewership:")
 print(squid_game_total)
 ```
 \
@@ -611,14 +617,14 @@ print(squid_game_total)
 #| code-summary: "Show code"
 #| results: hide
 
-
+#filter for red notice and the year 2021. sum the weekly hours viewed and weekly views
 library(lubridate)
 red_notice_2021 <- GLOBAL_TOP_10 |>
   filter(show_title == "Red Notice", year(week) == 2021) |>
   summarise(total_hours_viewed = sum(weekly_hours_viewed, na.rm = TRUE),
     total_views = sum(weekly_views, na.rm = TRUE))
 
-#get total hours views and divide by runtime to estimate viewership
+#get total hours views and divide by runtime to estimate viewership since total views is 0
 print(red_notice_2021['total_hours_viewed']/1.96)
 ```
 \
@@ -665,6 +671,7 @@ most_recent_film <- us_films |>
 ```{r exploratory data analysis 10 calculations}
 #| code-fold: true
 #| code-summary: "Show code"
+#| results: hide
 
 #filter for tv shows, count the number of unique countries where it debuted in top 10
 tv_debut_countries <- COUNTRY_TOP_10 |>
@@ -672,6 +679,7 @@ tv_debut_countries <- COUNTRY_TOP_10 |>
   group_by(show_title) |>
   filter(week == min(week)) |>
   summarise(countries_count = n_distinct(country_name), .groups = "drop") |>
-  arrange(desc(countries_count)) |>
-  slice(1)
+  arrange(desc(countries_count))
+
+print(tv_debut_countries)
 ```
