@@ -1,5 +1,5 @@
 ---
-title: "Mini Project #1"
+title: "Netflix Press Release"
 format: 
   html:
     code-fold: true
