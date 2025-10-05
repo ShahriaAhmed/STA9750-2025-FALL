@@ -475,7 +475,26 @@ titles_by_year_category |>
 ```
 ## Additional Exploratory Data Analysis
 \
-<ins>Follow along to see additional insights from our Netflix data</ins>
+<ins>Follow along to see additional insights from our Netflix data. Let's take a look below.</ins>
+\
+```{r data cleanup}
+#| echo: true
+
+library(stringr)
+format_titles <- function(df){
+    colnames(df) <- str_replace_all(colnames(df), "_", " ") |> str_to_title()
+    df
+}
+
+GLOBAL_TOP_10 |> 
+    mutate(`runtime_(minutes)` = round(60 * runtime)) |>
+    select(-season_title, 
+           -runtime) |>
+    format_titles() |>
+    head(n=20) |>
+    datatable(options=list(searching=FALSE, info=FALSE)) |>
+    formatRound(c('Weekly Hours Viewed', 'Weekly Views'))
+```
 \
 \
 1. Netflix operates in 94 different countries
