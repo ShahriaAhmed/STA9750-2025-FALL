@@ -679,3 +679,5 @@ tv_debut_countries <- COUNTRY_TOP_10 |>
 
 print(tv_debut_countries)
 ```
+\
+Thank you for following along as we look through Netflix data. The findings highlight Netflix’s continued impact on global viewing habits, with audiences embracing stories that cross languages and borders. As data continues to shape entertainment trends, Netflix remains committed to delivering compelling and diverse content to audiences worldwide. See you on the next release! 
