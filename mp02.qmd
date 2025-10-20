@@ -24,7 +24,7 @@ Across the United States, the dream of homeownership is slipping further out of 
 ::: {.callout-note}
 ## Did You Know?
 Since 2019, the income needed to buy a single-family home has doubled (Figure 1).
-<div style="padding-left: 70px;">
+<div style="padding-left: 85px;">
 ##### Qualifying income for a mortgage on the median-priced U.S. home, $ in thousands
 </div>
 <div style="text-align: center;">
@@ -1517,13 +1517,13 @@ ggplot(viz1_data, aes(x = avg_composite_score, y = rent_burden_change)) +
   scale_size_continuous(
     name = "Population\nGrowth %",
     range = c(1, 8)
-  ) +
+  ) + guides(color = guide_legend(override.aes = list(size = 4))) +
   labs( #adjust labels, annotations, font, color ,size etc
     title = "YIMBY Success: Housing Growth vs Rent Burden Change",
-    subtitle = "Size shows population growth | Green = All 4 YIMBY criteria met",
+    subtitle = "Size shows population growth, Green shows all 4 YIMBY criteria met",
     x = "Average Housing Growth Score (2014-2023)",
-    y = "Change in Rent Burden Index (Recent - Early)",
-    caption = "YIMBY = High early rent burden + Falling rent burden + Pop growth + High housing growth"
+    y = "Change in Rent Burden Index (2023-2014)",
+    caption = "YIMBY is defined by high early rent burden + drop in rent burden + population growth + high housing growth"
   ) +
   annotate("text", x = nat_avg_housing, y = max(viz1_data$rent_burden_change, na.rm = TRUE) * 0.95,
            label = "Avg Housing Growth", hjust = -0.1, color = "gray40", size = 3) +
@@ -1533,7 +1533,7 @@ ggplot(viz1_data, aes(x = avg_composite_score, y = rent_burden_change)) +
   theme( #theme and sizing
     plot.title = element_text(face = "bold", size = 25, margin = margin(b = 5)),
     plot.subtitle = element_text(size = 18, color = "gray40", margin = margin(b = 15)),
-    plot.caption = element_text(size = 12, hjust = 0, margin = margin(t = 10)),
+    plot.caption = element_text(size = 16, hjust = 0, margin = margin(t = 10)),
     axis.title = element_text(face = "bold", size = 18),
     legend.position = "right",
     panel.grid.minor = element_blank(),
@@ -1575,7 +1575,7 @@ ggplot(comparison_data, aes(x = reorder(NAME, -rent_burden), y = rent_burden, fi
                     name = "") +
   labs(#labels, titles, axis, captions
     title = "YIMBY Success: Rent Burden Reduction in Top Cities",
-    subtitle = "All cities shown had high early rent burden, growing populations, and above-average housing growth",
+    subtitle = "All cities shown had high early rent burden, a growing population, and above average housing growth",
     x = "",
     y = "Rent Burden Index",
     caption = "Green < Red indicates successful rent burden reduction"
@@ -1587,7 +1587,9 @@ ggplot(comparison_data, aes(x = reorder(NAME, -rent_burden), y = rent_burden, fi
     plot.subtitle = element_text(size = 14, color = "gray40", margin = margin(b = 15)),
     axis.title = element_text(face = "bold", size = 18),
     axis.text = element_text(size = 14),
+    plot.caption = element_text(size = 16, margin = margin(b = 5)),
     legend.position = "top",
+    legend.text = element_text(size = 14), #increase legend item text size
     panel.grid.major.y = element_blank(),
     panel.grid.minor = element_blank()
   )
