@@ -13,10 +13,12 @@ website:
     right:
       - text: "Home"
         href: index.qmd
-      - text: "Projects"
+      - text: "Other Projects"
         href: projects.qmd
       - text: "Project #1"
         href: mp01.qmd
+      - text: "Project #2"
+        href: mp02.qmd
       - icon: github
         href: https://github.com/ShahriaAhmed/STA9750-2025-FALL
 format:

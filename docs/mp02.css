@@ -1,0 +1,24 @@
+@font-face {
+  font-family: 'Dream Orphans';
+  src: url('fonts/DreamOrphans.ttf') format('truetype');
+}
+
+
+/* Body font */
+body {
+  font-family: Calibri, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6, .navbar {
+  font-family: 'Dream Orphans', sans-serif;
+}
+
+.dataTables_wrapper {
+  width: 100%;
+  margin-right: 2em;
+}
+
+table.dataTable {
+  width: 100% !important;
+}
