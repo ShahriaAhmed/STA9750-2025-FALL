@@ -6,21 +6,12 @@ format:
     code-summary: "Show code"
 ---
 ```{r}
+# Install required packages if you don't have them
+# install.packages("RSocrata")
+# install.packages("dplyr")
 
-# Set CRAN mirror
-options(repos = c(CRAN = "https://cloud.r-project.org/"))
-
-# Install required packages if needed
-if (!requireNamespace("httr", quietly = TRUE)) {
-  install.packages("httr")
-}
-if (!requireNamespace("jsonlite", quietly = TRUE)) {
-  install.packages("jsonlite")
-}
-
-# Load libraries
-library(httr)
-library(jsonlite)
+.libPaths("/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library/RSocrata")
+library(RSocrata)
 library(dplyr)
 
 # Define the file path where you'll save the data
@@ -36,35 +27,11 @@ if (file.exists(data_file)) {
   cat("Downloading Jan-Apr 2024 data from NYC Open Data portal...\n")
   cat("This may take several minutes...\n")
   
-  # Build the URL with proper encoding
-  base_url <- "https://data.cityofnewyork.us/resource/erm2-nwe9.json"
+  # The API endpoint with first 4 months of 2024 filter
+  url <- "https://data.cityofnewyork.us/resource/erm2-nwe9.json?$where=created_date>='2024-01-01T00:00:00' AND created_date<'2024-05-01T00:00:00'"
   
-  # Download the data with query parameters
-  response <- GET(
-    base_url,
-    query = list(
-      `$where` = "created_date>='2024-01-01T00:00:00' AND created_date<'2024-05-01T00:00:00'",
-      `$limit` = 1000000
-    ),
-    timeout(300)  # 5 minute timeout
-  )
-  
-  # Check if request was successful
-  if (http_error(response)) {
-    stop(sprintf("API request failed with status %s", status_code(response)))
-  }
-  
-  # Get the response content
-  content_text <- content(response, "text", encoding = "UTF-8")
-  
-  # Check if we got valid content
-  if (nchar(content_text) == 0) {
-    stop("API returned empty response")
-  }
-  
-  cat("Parsing JSON response...\n")
-  # Parse the JSON response
-  df <- fromJSON(content_text, flatten = TRUE)
+  # Download the data
+  df <- read.socrata(url)
   
   # Save to file
   cat("Saving data to file...\n")
@@ -76,3 +43,255 @@ if (file.exists(data_file)) {
 cat(sprintf("Data loaded: %d rows, %d columns\n", nrow(df), ncol(df)))
 head(df)
 ```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(stringr)
+
+# Aggregate by complaint_type
+complaint_summary <- df %>%
+  group_by(complaint_type) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+# Convert complaint_type to Title Case for readability
+complaint_summary <- complaint_summary %>%
+  mutate(complaint_type = str_to_title(complaint_type))
+
+# Plot top 15 complaint types with labels
+ggplot(complaint_summary %>% slice_max(count, n = 15),
+       aes(x = reorder(complaint_type, count), y = count)) +
+  geom_col(fill = "#2E86C1", width = 0.7) +
+  geom_text(aes(label = comma(count)),
+            hjust = -0.05, size = 3.5, family = "sans") +
+  coord_flip(clip = "off") +  # allow labels to go past plot area
+  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +
+  labs(
+    title = "Top 15 Complaint Types (Jan–Apr 2024)",
+    x = "Complaint Type",
+    y = "Number of Complaints"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    plot.margin = margin(10, 40, 10, 10)  # extra space on right for labels
+  )
+
+
+
+```
+
+```{r}
+# Aggregate by borough
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(stringr)
+
+mako_colors <- c("#0D0887", "#6A00A8", "#B12A90", "#E16462", "#FCA636", "#F0F921")
+# Aggregate by borough
+borough_summary <- df %>%
+  group_by(borough) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  mutate(borough = str_to_title(borough))  # title case
+
+# Plot
+ggplot(borough_summary,
+       aes(x = count, y = reorder(borough, count), fill = borough)) +
+  geom_col(width = 0.6, show.legend = FALSE) +
+  geom_text(aes(label = comma(count)),
+            hjust = -0.05, size = 4, family = "sans") +  # data labels
+  scale_fill_manual(values = mako_colors) +
+  scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +  # fix scientific notation
+  labs(
+    title = "311 Complaints by Borough (Jan–Apr 2024)",
+    x = "Number of Complaints",
+    y = "Borough"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    plot.margin = margin(10, 40, 10, 10)  # extra space for labels
+  ) +
+  coord_cartesian(clip = "off")  # allow data labels to extend past plot area
+
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(stringr)
+
+mako_colors <- c("#0D0887", "#6A00A8", "#B12A90", "#E16462", "#FCA636", "#F0F921")
+# Aggregate and get top 5 (largest counts first)
+top5_location <- df %>%
+  filter(!is.na(location_type)) %>%  # exclude NA
+  group_by(location_type) %>%
+  summarise(count = n()) %>%
+  slice_max(count, n = 5) %>%
+  mutate(location_type = str_to_title(location_type)) %>%
+  arrange(count)  # ascending for horizontal bars
+
+# Plot
+ggplot(top5_location,
+       aes(x = count, y = reorder(location_type, -count), fill = location_type)) +
+  geom_col(width = 0.6, show.legend = FALSE) +
+  geom_text(aes(label = comma(count)),
+            hjust = -0.05, size = 4, family = "sans") +
+  scale_fill_manual(values = mako_colors) +
+  scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +
+  labs(
+    title = "Top 5 Location Types (Jan–Apr 2024)",
+    x = "Number of Complaints",
+    y = "Location Type"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    plot.margin = margin(10, 40, 10, 10)
+  ) +
+  coord_cartesian(clip = "off")
+
+```
+
+```{r fig.height=6, fig.width=8}
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(scales)
+library(stringr)
+
+mako_colors <- c("#0D0887", "#6A00A8", "#B12A90", "#E16462", "#FCA636", "#F0F921")
+# Ensure date columns are in POSIXct format
+df <- df %>%
+  mutate(
+    created_date = ymd_hms(created_date, tz = "America/New_York"),
+    closed_date = ymd_hms(closed_date, tz = "America/New_York")
+  )
+
+# Create a new column: time to resolve in days
+df <- df %>%
+  mutate(
+    resolution_time_days = as.numeric(difftime(closed_date, created_date, units = "days"))
+  )
+
+# Remove NA or unspecified boroughs
+df_clean <- df %>% 
+  filter(!is.na(borough) & borough != "Unspecified" & !is.na(resolution_time_days))
+
+# Compute average resolution time by borough
+borough_resolution <- df_clean %>%
+  group_by(borough) %>%
+  summarise(avg_resolution_days = mean(resolution_time_days, na.rm = TRUE)) %>%
+  mutate(borough = str_to_title(borough))
+
+# Scatter plot
+ggplot(borough_resolution, aes(x = reorder(borough, avg_resolution_days), y = avg_resolution_days)) +
+  geom_point(size = 4, color = "#E74C3C") +
+  geom_text(aes(label = round(avg_resolution_days, 1)), 
+            vjust = -0.8, size = 4) +
+  scale_fill_manual(values = mako_colors) +
+  labs(
+    title = "Average Resolution Time by Borough (Days)",
+    x = "Borough",
+    y = "Average Resolution Time (Days)"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),  # centered title
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10))
+  )
+
+```
+
+```{r fig.height=9, fig.width=10}
+# Install required packages if not already installed
+# install.packages("tidycensus")
+# install.packages("dplyr")
+# install.packages("ggplot2")
+# install.packages("scales")
+
+library(tidycensus)
+library(tigris)
+library(sf)
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+# ---- 1. Set your Census API key ----
+census_api_key("ac91ffb3af86527f7a1a1334062d77454df470ed", install = TRUE, overwrite = TRUE)
+readRenviron("~/.Renviron")
+
+# ---- 2. Pull ACS median household income for NYC counties ----
+income_boro <- get_acs(
+  geography = "county",
+  variables = c(median_hh_income = "B19013_001E"),
+  state = "NY",
+  county = c("Bronx County", "Kings County", "New York County", "Queens County", "Richmond County"),
+  year = 2023,
+  survey = "acs5"
+) %>%
+  select(NAME, median_hh_income = estimate) %>%
+  # Map county names to boroughs for readability
+  mutate(borough = case_when(
+    NAME == "Bronx County, New York" ~ "Bronx",
+    NAME == "Kings County, New York" ~ "Brooklyn",
+    NAME == "New York County, New York" ~ "Manhattan",
+    NAME == "Queens County, New York" ~ "Queens",
+    NAME == "Richmond County, New York" ~ "Staten Island"
+  ))
+
+# ---- 3. Get NYC county shapefiles ----
+nyc_counties <- counties(state = "NY", cb = TRUE, class = "sf") %>%
+  filter(NAME %in% c("Bronx", "Kings", "New York", "Queens", "Richmond"))
+
+# ---- 4. Join ACS data to geometries ----
+# Map borough names back to county names for join
+income_boro <- income_boro %>%
+  mutate(NAME = case_when(
+    borough == "Manhattan" ~ "New York",
+    borough == "Brooklyn" ~ "Kings",
+    borough == "Bronx" ~ "Bronx",
+    borough == "Queens" ~ "Queens",
+    borough == "Staten Island" ~ "Richmond"
+  ))
+
+nyc_map_data <- nyc_counties %>%
+  left_join(income_boro, by = "NAME")
+
+# ---- 5. Define Mako-inspired palette ----
+mako_colors <- c("#0D0887", "#6A00A8", "#B12A90", "#E16462", "#FCA636")
+
+# ---- 6. Plot the choropleth map ----
+ggplot(nyc_map_data) +
+  geom_sf(aes(fill = median_hh_income), color = "white") +
+  scale_fill_gradientn(
+    colors = mako_colors,
+    labels = comma,
+    name = "Median Household Income"
+  ) +
+  labs(
+    title = "Median Household Income by NYC Borough (2023 ACS 5-Year Estimates)"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    legend.title = element_text(face = "bold"),
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
+  )
+
+```
+

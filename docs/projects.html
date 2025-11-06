@@ -107,6 +107,10 @@ ul.task-list li input[type="checkbox"] {
     <a class="nav-link" href="./mp02.html"> 
 <span class="menu-text">Project #2</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./finalproject.html"> 
+<span class="menu-text">Final Project</span></a>
+  </li>  
   <li class="nav-item compact">
     <a class="nav-link" href="https://github.com/ShahriaAhmed/STA9750-2025-FALL"> <i class="bi bi-github" role="img">
 </i> 
@@ -146,17 +150,30 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p><br>
-<br>
-<br>
-This is what I worked on for a while. It’s a basic IOS app using SpriteKit, modeled after Flappy Bird. My sprite was a Corgi because they’re fat and chonks and I love them.<br>
-<br>
-</p>
+<p>Below are some other projects I’m currently working on or have worked on in the past</p>
+<section id="nlp-sentiment-analysis-using-googles-burt-model" class="level3">
+<h3 class="anchored" data-anchor-id="nlp-sentiment-analysis-using-googles-burt-model">NLP Sentiment Analysis Using Google’s BURT Model</h3>
+<div style="text-align: center;">
+<p><img src="images/onsent.png" width="800"></p>
+</div>
+<p>The above is a website I created using React.js for frontend and Python (Flask) for backend. It uses Google’s FinBURT model to perform sentiment analysis. The website has two tabs and both return sentiment score: One for pasting in body of texts and one for pulling stock ticker headlines from news sites. Let’s say you saw a report on Bloomberg or Yahoo Finance and wanted to determine if it was positive or negative without reading the entire thing. You would use the first tab to paste in the article and get a score between -1 and 1 (-1 being negative and 1 being positive sentiment). The second tab allows you to type in a ticker and it will pull headlines from the last 5 business days, aggregate the values into one composite score and tell you if sentiment was overall positive or negative</p>
+</section>
+<section id="weather-dashboard" class="level3">
+<h3 class="anchored" data-anchor-id="weather-dashboard">Weather Dashboard</h3>
+<p>You may have noticed the Kalshi ads plastered all over New York. It’s a private company that lets you bet on events. Anything from who’s going to win the NYC election, to sports and what the weather will be like tomorrow across cities. It’s pure degeneracy and gamified gambling. I became interested in this one day and went down a rabbit hole, trading futures contracts on weather in NYC. There was some science and math behind it of course. The weather readings are based on the national weather service stations in Central Park for NYC and other key areas for different cities. The futures contracts are settled based on the readings from NWS, which also happens to have an API that you can call. The website below was created in React.js and hosted using Vercel. It uses the NWS API to pull current and forecasted readings for all major cities on an hourly and five minute basis. Any data is an edge in this niche market. Click here to visit the site: <button type="button" class="btn btn-warning" onclick="window.location.href='https://wethrbetz.vercel.app/';"> Weather </button></p>
+<div style="text-align: center;">
+<p><img src="images/weather.png" width="800"></p>
+</div>
+</section>
+<section id="corgi-jump" class="level3">
+<h3 class="anchored" data-anchor-id="corgi-jump">Corgi Jump</h3>
+<p>This was my first coding project ever. I was drawn to programming because of Flappy Bird. I thought it was super simple, but cool and intuitive. It made me want to create games that can be played by anyone, especially online. This is a basic IOS app using SpriteKit, modeled after Flappy Bird. My sprite was a Corgi because they’re fat and chonks and I love them.</p>
 <div style="text-align: center;">
 <p><img src="images/corgijump.gif" width="300"></p>
 </div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

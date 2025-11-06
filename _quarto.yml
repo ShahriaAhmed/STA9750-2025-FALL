@@ -19,6 +19,8 @@ website:
         href: mp01.qmd
       - text: "Project #2"
         href: mp02.qmd
+      - text: "Final Project"
+        href: finalproject.qmd
       - icon: github
         href: https://github.com/ShahriaAhmed/STA9750-2025-FALL
 format:
