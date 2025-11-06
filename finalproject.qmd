@@ -1,0 +1,78 @@
+---
+title: "Final Project"
+format: 
+  html:
+    code-fold: true
+    code-summary: "Show code"
+---
+```{r}
+
+# Set CRAN mirror
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
+
+# Install required packages if needed
+if (!requireNamespace("httr", quietly = TRUE)) {
+  install.packages("httr")
+}
+if (!requireNamespace("jsonlite", quietly = TRUE)) {
+  install.packages("jsonlite")
+}
+
+# Load libraries
+library(httr)
+library(jsonlite)
+library(dplyr)
+
+# Define the file path where you'll save the data
+data_file <- "nyc_311_data_2024_jan_apr.rds"
+
+# Check if the file already exists
+if (file.exists(data_file)) {
+  # If it exists, just read it
+  cat("Loading existing Jan-Apr 2024 data from file...\n")
+  df <- readRDS(data_file)
+} else {
+  # If it doesn't exist, download it
+  cat("Downloading Jan-Apr 2024 data from NYC Open Data portal...\n")
+  cat("This may take several minutes...\n")
+  
+  # Build the URL with proper encoding
+  base_url <- "https://data.cityofnewyork.us/resource/erm2-nwe9.json"
+  
+  # Download the data with query parameters
+  response <- GET(
+    base_url,
+    query = list(
+      `$where` = "created_date>='2024-01-01T00:00:00' AND created_date<'2024-05-01T00:00:00'",
+      `$limit` = 1000000
+    ),
+    timeout(300)  # 5 minute timeout
+  )
+  
+  # Check if request was successful
+  if (http_error(response)) {
+    stop(sprintf("API request failed with status %s", status_code(response)))
+  }
+  
+  # Get the response content
+  content_text <- content(response, "text", encoding = "UTF-8")
+  
+  # Check if we got valid content
+  if (nchar(content_text) == 0) {
+    stop("API returned empty response")
+  }
+  
+  cat("Parsing JSON response...\n")
+  # Parse the JSON response
+  df <- fromJSON(content_text, flatten = TRUE)
+  
+  # Save to file
+  cat("Saving data to file...\n")
+  saveRDS(df, data_file)
+  cat("Data saved successfully!\n")
+}
+
+# Now you can work with your data
+cat(sprintf("Data loaded: %d rows, %d columns\n", nrow(df), ncol(df)))
+head(df)
+```
