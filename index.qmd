@@ -8,7 +8,7 @@ title: "A Site In Progress"
 \
 Hello, my name is Shahria but most people call me Shah. Welcome to my site! Here's a little bit about me.\
 
-I'm a data scientist on Wall Street, working on AI development and testing in equity research. Currently I'm getting my Master's at CUNY Baruch. But in between work and school, I take a lot of pictures. Sunsets, cityscapes, portraits, nature, astrophotography — I love it all! My interest started back in school when I worked on an in-depth research report on Alzheimer's. It's a brutal and unforgiving disease with no cure. I wanted to remember all the things I've experienced when I became old, so I started taking pictures with my iPhone 6 at the time.
+I'm a data scientist on Wall Street, working on AI development and strategy in equity research. Currently I'm getting my Master's at CUNY Baruch. But in between work and school, I take a lot of pictures. Sunsets, cityscapes, portraits, nature, astrophotography, I love it all! My interest started back in high school and because my older brother was a photographer. I wanted to remember all the things I've experienced when I became old, so I started taking pictures with my iPhone 6 at the time.
 
 My current setup:
 
