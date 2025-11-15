@@ -1001,30 +1001,57 @@ results <- list(stats = analyze_astoria_proposal(trees_with_districts, nyc_distr
 
 # map showing planting opportunities near ps 122q
 ggplot() +
-  geom_sf(data = results$stats$astoria_district, fill = "gray95", color = "gray50", size = 1) +
+  # base layer: district 22 boundary as light gray background
+  geom_sf(data = results$stats$astoria_district, 
+          fill = "gray95",   # very light fill
+          color = "gray50",  # medium gray border
+          size = 1) +
+  
+  # layer 2: existing healthy trees in green
   geom_sf(data = results$stats$district_22_trees_sf |> 
-            filter(!(tpcondition %in% c("Dead", "Retired") | !is.na(stumpdiameter))), 
-          aes(color = "Existing Trees"), size = 0.5, alpha = 0.6) +
+            filter(!(tpcondition %in% c("Dead", "Retired") | !is.na(stumpdiameter))),  # exclude dead/stumps
+          aes(color = "Existing Trees"), 
+          size = 0.5,    # small dots
+          alpha = 0.6) +  # semi-transparent
+  
+  # layer 3: planting opportunities (dead trees and stumps) in orange
   geom_sf(data = results$stats$district_22_trees_sf |> 
-            filter(tpcondition %in% c("Dead", "Retired") | !is.na(stumpdiameter)),
-          aes(color = "Planting Sites (Dead/Retired)"), size = 1.5, alpha = 0.8) +
-  geom_sf(data = results$stats$ps122_buffer, fill = NA, color = "darkgreen", 
-          linetype = "dashed", size = 1) +
+            filter(tpcondition %in% c("Dead", "Retired") | !is.na(stumpdiameter)),  # only dead/stumps
+          aes(color = "Planting Sites (Dead/Retired)"), 
+          size = 1.5,    # larger dots so they stand out
+          alpha = 0.8) +
+  
+  # layer 4: 500m buffer around ps 122q shown as dashed circle
+  geom_sf(data = results$stats$ps122_buffer, 
+          fill = NA,              # no fill, just outline
+          color = "darkgreen",    # green to match school zone theme
+          linetype = "dashed",    # dashed line for "area of focus"
+          size = 1) +
+  
+  # define colors for the two tree categories
   scale_color_manual(
     values = c("Existing Trees" = "forestgreen", 
                "Planting Sites (Dead/Retired)" = "darkorange"),
-    name = ""
+    name = ""  # no legend title
   ) +
+  
+  # zoom in to just the buffer area
   coord_sf(xlim = st_bbox(results$stats$ps122_buffer)[c("xmin", "xmax")],
            ylim = st_bbox(results$stats$ps122_buffer)[c("ymin", "ymax")]) +
+  
+  # clean theme
   theme_minimal() +
+  
+  # titles and labels
   labs(
     title = "Planting Sites Near P.S. 122Q",
     subtitle = "District 22 (Astoria) - 500m radius shown",
     caption = paste0("Planting sites available: ", nrow(results$stats$stumps_near_school))
   ) +
+  
+  # customize appearance
   theme(
-    legend.position = "bottom",
+    legend.position = "bottom",  # legend at bottom so it doesn't cover map
     plot.title = element_text(face = "bold", size = 14)
   )
 ```
@@ -1039,30 +1066,46 @@ ggplot() +
 #| fig-width: 10
 #| fig-height: 6
 
-# bar chart comparing tree density
+# prep data for the bar chart - add labels and highlight district 22
 density_plot_data <- results$stats$density_comparison |>
   mutate(
-    district_label = paste("District", CounDist),
-    is_target = CounDist == 22
+    district_label = paste("District", CounDist),  # create readable labels
+    is_target = CounDist == 22  # flag district 22 for highlighting
   )
 
-ggplot(density_plot_data, aes(x = reorder(district_label, tree_density), 
+# create horizontal bar chart comparing tree density
+ggplot(density_plot_data, aes(x = reorder(district_label, tree_density),  # sort by density (lowest first)
                                y = tree_density,
-                               fill = is_target)) +
+                               fill = is_target)) +  # color based on whether it's district 22
+  
+  # create the bars
   geom_col() +
-  geom_text(aes(label = format(tree_count, big.mark = ",")),
-            hjust = -0.1, size = 3) +
+  
+  # add text labels showing total tree count for each district
+  geom_text(aes(label = format(tree_count, big.mark = ",")),  # add commas to numbers
+            hjust = -0.1,  # nudge text to the right of bars
+            size = 3) +
+  
+  # color district 22 orange, others gray
   scale_fill_manual(values = c("TRUE" = "#E69F00", "FALSE" = "gray70"),
-                    guide = "none") +
+                    guide = "none") +  # hide legend
+  
+  # flip to horizontal bars for easier label reading
   coord_flip() +
+  
+  # clean minimal styling
   theme_minimal() +
+  
+  # titles and axis labels
   labs(
     title = "Tree Density Comparison",
     subtitle = "District 22 is one of least dense districts amongst peers",
-    x = "",
+    x = "",  # no label needed for districts
     y = "Trees per Square Unit",
     caption = "Numbers show total tree count"
   ) +
+  
+  # adjust text formatting
   theme(
     plot.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10)
@@ -1079,22 +1122,38 @@ ggplot(density_plot_data, aes(x = reorder(district_label, tree_density),
 #| fig-width: 10
 #| fig-height: 6
 
-# bar chart showing stump counts
-ggplot(density_plot_data, aes(x = reorder(district_label, stump_count),
+# bar chart showing stump counts across districts
+ggplot(density_plot_data, aes(x = reorder(district_label, stump_count),  # sort bars by stump count
                                y = stump_count,
-                               fill = is_target)) +
+                               fill = is_target)) +  # highlight district 22 in orange
+  
+  # create the bars
   geom_col() +
-  geom_text(aes(label = stump_count), hjust = -0.1, size = 3) +
+  
+  # add text labels showing exact counts
+  geom_text(aes(label = stump_count), 
+            hjust = -0.1,  # push labels slightly to the right of bars
+            size = 3) +
+  
+  # color scheme: orange for district 22, gray for others
   scale_fill_manual(values = c("TRUE" = "#E69F00", "FALSE" = "gray70"),
-                    guide = "none") +
+                    guide = "none") +  # hide the legend since colors are self-explanatory
+  
+  # flip coordinates so bars go horizontal (easier to read district names)
   coord_flip() +
+  
+  # clean theme
   theme_minimal() +
+  
+  # titles and labels
   labs(
     title = "Available Planting Sites (Stumps)",
     subtitle = "District 22 has significant opportunity for youth engagement",
-    x = "",
+    x = "",  # no x-axis label needed
     y = "Number of Stumps"
   ) +
+  
+  # adjust text sizes for readability
   theme(
     plot.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10)
@@ -1111,17 +1170,33 @@ ggplot(density_plot_data, aes(x = reorder(district_label, stump_count),
 
 # map showing stumps across all comparison districts
 ggplot() +
-  geom_sf(data = results$stats$comparison_district_bounds, aes(fill = factor(CounDist)), 
-          alpha = 0.3, color = "gray30") +
-  geom_sf(data = results$stats$stumps_all_districts, color = "red", size = 0.8, alpha = 0.6) +
+  # first layer: district boundaries with different colors for each district
+  geom_sf(data = results$stats$comparison_district_bounds, 
+          aes(fill = factor(CounDist)), 
+          alpha = 0.3,        # make them semi-transparent so stumps show through
+          color = "gray30") + # darker borders to distinguish districts
+  
+  # second layer: all the stump locations as red dots
+  geom_sf(data = results$stats$stumps_all_districts, 
+          color = "red",      # red really pops against the district colors
+          size = 0.8,         # small dots since there are many
+          alpha = 0.6) +      # slight transparency to see overlap
+  
+  # use a nice color palette for the district fills
   scale_fill_brewer(palette = "Set2", name = "District") +
+  
+  # clean minimal theme
   theme_minimal() +
+  
+  # add titles and explanatory text
   labs(
     title = "Distribution of Planting Sites Across Districts",
     subtitle = "Red points show stump locations (potential planting sites)"
   ) +
+  
+  # customize theme elements
   theme(
-    legend.position = "right",
+    legend.position = "right",  # legend on the side so it doesn't cover the map
     plot.title = element_text(face = "bold", size = 12)
   )
 ```
