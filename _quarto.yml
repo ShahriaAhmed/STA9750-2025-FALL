@@ -19,6 +19,8 @@ website:
         href: mp01.qmd
       - text: "Project #2"
         href: mp02.qmd
+      - text: "Project #3"
+        href: mp03.qmd
       - text: "Final Project"
         href: finalproject.qmd
       - icon: github
