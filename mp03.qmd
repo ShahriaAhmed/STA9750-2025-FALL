@@ -290,7 +290,6 @@ plot_nyc_trees <- function(districts, trees, sample_size = NULL) {
   } else {
     # otherwise just go for the full dataset
     trees_to_plot <- trees
-    message("Plotting all ", format(nrow(trees), big.mark = ","), " trees")
   }
   
   # build the map object
@@ -335,6 +334,95 @@ plot_nyc_trees(nyc_districts, nyc_trees, sample_size = 10000)
 Let's see what this looks like when you plot the entire trees data!
 ```{r}
 plot_nyc_trees(nyc_districts, nyc_trees, sample_size = NULL)
+```
+
+This is pretty dense. Below is an interactive chart where you can zoom in on specific trees and regions, with a sample of 50,000 trees.
+```{r}
+#| code-fold: true
+#| code-summary: "Interactive tree map with plotly"
+#| message: false
+#| warning: false
+
+# function to create an interactive map of nyc trees
+#
+# parameters:
+# districts: sf object containing city council district boundaries
+# trees: sf object containing nyc street tree locations
+# sample_size: optional number of trees to plot
+#
+# returns: an interactive chart
+plot_nyc_trees_interactive <- function(districts, trees, sample_size = NULL) {
+  library(ggplot2)
+  library(dplyr)
+  library(plotly)
+  library(sf)
+  
+  # sample trees limit
+  if (!is.null(sample_size) && sample_size < nrow(trees)) {
+    message("sampling ", format(sample_size, big.mark = ","),
+            " trees from ", format(nrow(trees), big.mark = ","), " total")
+    trees_to_plot <- trees |> slice_sample(n = sample_size)
+  } else {
+    trees_to_plot <- trees
+    message("plotting all ", format(nrow(trees), big.mark = ","), " trees")
+  }
+  
+  # add hover text with useful info about each tree
+  # check which columns actually exist in the data
+  trees_to_plot <- trees_to_plot |>
+    mutate(
+      hover_text = paste0(
+        "Species: ", ifelse(!is.na(genusspecies), genusspecies, "Unknown"), "<br>",
+        "Condition: ", ifelse(!is.na(tpcondition), tpcondition, "Unknown")
+      )
+    )
+  
+  # create the base ggplot
+  p <- ggplot() +
+    # district boundaries
+    geom_sf(data = districts,
+            fill = NA,
+            color = "black",
+            linewidth = 0.5) +
+    
+    # tree points with hover info
+    geom_sf(data = trees_to_plot,
+            aes(text = hover_text),  
+            color = "darkgreen",
+            alpha = 0.3,
+            size = 0.1) +
+    
+    theme_minimal() +
+    theme(
+      axis.text = element_text(size = 8),
+      plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 10)
+    ) +
+    
+    labs(
+      title = "NYC Street Trees by City Council District",
+      subtitle = sprintf("showing %s trees - zoom and hover for details",
+                        format(nrow(trees_to_plot), big.mark = ",")),
+      x = "Longitude",
+      y = "Latitude"
+    )
+  
+  # convert to plotly for interactivity
+  # tooltip shows custom hover text, you can zoom/pan to explore dense areas
+  interactive_plot <- ggplotly(p, tooltip = "text") |>
+    layout(
+      # improve the hover label appearance
+      hoverlabel = list(
+        bgcolor = "white",
+        font = list(size = 12)
+      )
+    )
+  
+  return(interactive_plot)
+}
+
+#call function
+plot_nyc_trees_interactive(nyc_districts, nyc_trees, sample_size = 50000)
 ```
 
 
@@ -516,7 +604,7 @@ most_dense$all_densities |>
 3.Which district has highest fraction of dead trees out of all trees? District 32 has the highest fraction of dead trees at **14.3 %**
 ```{r}
 #| code-fold: true
-#| code-summary: "Show code"
+#| code-summary: "Most dead trees"
 #| message: false
 #| warning: false
 
@@ -577,7 +665,7 @@ most_dead_trees$all_fractions |>
 4. What is the most common tree species in Manhattan? This would be Gleditsia triacanthos var. inermis - Thornless honeylocust
 ```{r}
 #| code-fold: true
-#| code-summary: "Show code"
+#| code-summary: "Most common species"
 #| message: false
 #| warning: false
 library(sf)
@@ -633,7 +721,7 @@ most_common_trees$top_species |>
 5.What is the species of the tree closest to Baruch’s campus? This would be Gleditsia triacanthos - Honeylocust, which is 33 meters away in district 2
 ```{r}
 #| code-fold: true
-#| code-summary: "Show code"
+#| code-summary: "Closest to Baruch campus"
 #| message: false
 #| warning: false
 
