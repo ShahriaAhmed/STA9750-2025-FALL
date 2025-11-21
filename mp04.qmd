@@ -367,6 +367,7 @@ largest_revisions <- ces_combined |>
   select(date, original, final, revision, level) |>
   head(10) #return 10 rows
 
+#show results in a clean datatable 
 largest_revisions |>
   arrange(date) |>  # sort by date first, before mutating
   mutate(
@@ -398,6 +399,8 @@ extreme_revisions <- ces_combined |>
   select(date, original, final, revision) |>
   slice(c(1:5, (n()-4):n())) #select top 5 and bottom 5
 
+
+#show results in a clean formatted data table
 extreme_revisions |>
   mutate(
     Date = format(date, "%Y-%m"), #format date and numbers by commas
@@ -588,7 +591,7 @@ ggplot(ces_combined, aes(x = factor(decade), y = revision)) +
     x = "Decade",
     y = "Revision (thousands)"
   ) +
-  theme(
+  theme(#adjust font and format
     plot.title = element_text(face = "bold", size = 14)
   )
 ```
@@ -613,7 +616,7 @@ ggplot(month_stats, aes(x = month_name, y = mean_abs_revision)) +
     x = "Month",
     y = "Mean absolute revision (thousands)"
   ) +
-  theme(
+  theme(#adjust font and format
     plot.title = element_text(face = "bold", size = 14),
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
@@ -649,7 +652,7 @@ ces_combined |>
     x = "5-year Period",
     y = "Percentage of Revisions That Were Positive (%)"
   ) +
-  theme(
+  theme(#adjust font and format
     plot.title = element_text(face = "bold", size = 14)
   )
 ```
@@ -689,7 +692,7 @@ ggplot(ces_combined, aes(x = date)) +
       labels = comma
     )
   ) +
-  
+  #x axis interval of 5 years
   scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
   
   theme_minimal() +
@@ -733,7 +736,7 @@ recent_data <- ces_combined |>
 ggplot(recent_data, aes(x = date)) +
   # original estimate line
   geom_line(aes(y = original, color = "Original Estimate"), 
-            linewidth = 1.2, 
+            linewidth = 1.2, #adjust parameters for plotting
             linetype = "dashed",
             alpha = 0.8) + #ADJUST transparency 
   geom_point(aes(y = original, color = "Original Estimate"), 
@@ -748,7 +751,7 @@ ggplot(recent_data, aes(x = date)) +
   # add ribbons to show the revision gap
   geom_ribbon(aes(ymin = pmin(original, final), #set y axis min and max values
                   ymax = pmax(original, final)),
-              fill = "gray", alpha = 0.3) +
+              fill = "gray", alpha = 0.3) + #adjust transparency
   
   # color scheme
   scale_color_manual(
@@ -761,7 +764,7 @@ ggplot(recent_data, aes(x = date)) +
     name = "Employment (thousands)",
     labels = comma
   ) +
-  
+  #adjust y value labels
   scale_x_date(
     date_breaks = "1 month", 
     date_labels = "%b\n%Y",
@@ -903,7 +906,7 @@ test4_result <- ces_test_data |>
          alternative = "two.sided")
 
 test4_result |>
-  mutate(
+  mutate(#select these values for clean formatted datatable 
     Test = "Absolute Revision: Post-2020 vs Pre-2020",
     `T-Statistic` = round(statistic, 3),
     `Degrees of Freedom` = round(t_df, 0),
@@ -911,18 +914,18 @@ test4_result |>
     `Mean Difference` = round(estimate, 2),
     `95% CI Lower` = round(lower_ci, 2),
     `95% CI Upper` = round(upper_ci, 2),
-    Conclusion = ifelse(p_value < 0.05,
+    Conclusion = ifelse(p_value < 0.05,#threshold for p test
                        ifelse(estimate > 0, 
                               "Post-2020 revisions are significantly larger",
                               "Pre-2020 revisions were significantly larger"),
                        "No significant difference between periods")
   ) |>
   select(Test, `T-Statistic`, `Degrees of Freedom`, `P-Value`, 
-         `Mean Difference`, `95% CI Lower`, `95% CI Upper`, Conclusion) |>
+         `Mean Difference`, `95% CI Lower`, `95% CI Upper`, Conclusion) |> #select these columns values
   datatable(
     rownames = FALSE,
     options = list(dom = 't', scrollX = TRUE),
-    caption = "Test 4: Two-Sample T-Test for Absolute Revisions"
+    caption = "Test 4: Two-Sample T-Test for Absolute Revisions" #title
   )
 ```
 
@@ -939,17 +942,19 @@ Modern politics in the United States can be headache inducing. Anyone can say an
 #| message: false
 #| warning: false
 
+#load packages
 library(tidyverse)
 library(infer)
 library(DT)
 library(scales)
 
 # create presidents/party data
+# #code from professor assigning president to dates 
 presidents_party <- tidyr::expand_grid(year=1979:2025, 
                                        month = month.name, 
                                        president = NA, 
                                        party = NA) |> 
-    mutate(president = case_when(
+    mutate(president = case_when( 
         (month == "January")  & (year == 1979) ~ "Carter",
         (month == "February") & (year == 1981) ~ "Reagan",
         (month == "February") & (year == 1989) ~ "Bush 41",
@@ -965,7 +970,7 @@ presidents_party <- tidyr::expand_grid(year=1979:2025,
                            "D", 
                            "R"))
 
-# join with our ces data
+# join with our ces data to see which administration was elected during what time
 ces_with_president <- ces_combined |>
   mutate(month = month.name[month(date)]) |>
   left_join(presidents_party, by = c("year", "month"))
@@ -983,7 +988,8 @@ The claim that "nobody's ever even come close" is misleading, given that populat
 
 The 152 million number corroborates with PolitiFact and we can therefore conclude that this is mostly true. 
 ```{r}
-#| label: factcheck1-stats
+#| message: false
+#| warning: false
 #| code-fold: true
 #| code-summary: "show analysis of 160M jobs claim"
 
@@ -997,47 +1003,50 @@ months_over_160m <- ces_data |>
   filter(date <= "2020-01-01", level >= 160000) |>
   arrange(date)
 
-# show the months
+# show the months in a nice clean data table
+# if there is any higher employment number, it should show here
 months_over_160m |>
   mutate(
     Date = format(date, "%B %Y"),
-    `Employment (thousands)` = format(level, big.mark = ","),
+    `Employment (thousands)` = format(level, big.mark = ","), #comma format
     `Employment (millions)` = round(level / 1000, 1)
   ) |>
   select(Date, `Employment (thousands)`, `Employment (millions)`) |>
   datatable(
     rownames = FALSE,
     options = list(pageLength = 10, dom = 't'),
-    caption = "All Months with Employment ≥ 160 Million Before January 2020"
+    caption = "All Months with Employment ≥ 160 Million Before January 2020" #title
   )
 ```
 
 ```{r}
-#| label: factcheck1-viz1
+#| message: false
+#| warning: false
 #| code-fold: true
 #| fig-width: 12
 #| fig-height: 6
 
-# highlight the 160M threshold
+# highlight the 160M threshold as a dashed line
+# plot data in a clean formatted chart
 ces_data |> 
   mutate(year = year(date)) |>  # create year column first
-  filter(year >= 2015) |>
+  filter(year >= 2015) |> #filter for date past 2015  
   ggplot(aes(x = date, y = level / 1000)) +
   geom_line(linewidth = 1, color = "steelblue") +
-  geom_hline(yintercept = 160, linetype = "dashed", color = "red", linewidth = 1) +
+  geom_hline(yintercept = 160, linetype = "dashed", color = "red", linewidth = 1) + #indicate when the tweet was made
   geom_vline(xintercept = as.Date("2020-01-01"), linetype = "dotted", color = "darkgreen", linewidth = 1) +
-  annotate("text", x = as.Date("2020-01-01"), y = 145, 
+  annotate("text", x = as.Date("2020-01-01"), y = 145, #add anotation 
            label = "Trump's claim\n(Jan 2020)", hjust = 1.1, size = 3.5, color = "darkgreen") +
-  annotate("text", x = as.Date("2018-06-01"), y = 160.5, 
+  annotate("text", x = as.Date("2018-06-01"), y = 160.5, #add job number figure
            label = "160 Million threshold", hjust = 0, size = 3.5, color = "red") +
   scale_x_date(date_breaks = "6 months", date_labels = "%b\n%Y") +
   scale_y_continuous(labels = comma) +
   theme_minimal() +
-  labs(
+  labs(#title subtitle x and y axis labels
     title = "US Employment 2015-2020: Was 160 Million Unprecedented?",
-    subtitle = "red dashed line shows 160M threshold; green line marks Trump's claim date",
+    subtitle = "Red dashed line shows 160M threshold; green line marks Trump's claim date",
     x = "",
-    y = "employment (millions)",
+    y = "Employment (millions)",
     caption = "Employment exceeded 160M multiple times before January 2020"
   ) +
   theme(plot.title = element_text(face = "bold", size = 14))
@@ -1045,7 +1054,8 @@ ces_data |>
 
 
 ```{r}
-#| label: factcheck1-viz2
+#| message: false
+#| warning: false
 #| code-fold: true
 #| fig-width: 12
 #| fig-height: 6
@@ -1053,22 +1063,22 @@ ces_data |>
 # compare peak employment by president
 presidential_peaks <- ces_with_president |>
   group_by(president) |>
-  summarise(
+  summarise(#peak employment and date
     peak_employment = max(level, na.rm = TRUE),
     peak_date = date[which.max(level)],
     .groups = "drop"
   ) |>
   filter(!is.na(president))
-
+#plot bar plot with employment and presidential term
 ggplot(presidential_peaks, aes(x = reorder(president, peak_employment), 
                                 y = peak_employment / 1000)) +
-  geom_col(aes(fill = president == "Trump I"), alpha = 0.8) +
+  geom_col(aes(fill = president == "Trump I"), alpha = 0.8) + #format numbers cleanly
   geom_text(aes(label = format(round(peak_employment / 1000, 1), nsmall = 1)),
             hjust = -0.2, size = 3.5) +
   scale_fill_manual(values = c("FALSE" = "gray70", "TRUE" = "coral"), guide = "none") +
   coord_flip() +
   theme_minimal() +
-  labs(
+  labs(#title subtitle x and y values
     title = "Peak Employment by President",
     subtitle = "Trump I highlighted; employment in millions",
     x = "",
@@ -1084,7 +1094,8 @@ ggplot(presidential_peaks, aes(x = reorder(president, peak_employment),
 
 
 ```{r}
-#| label: factcheck2-stats
+#| message: false
+#| warning: false
 #| code-fold: true
 #| code-summary: "show analysis of revision rigging claim"
 
@@ -1098,7 +1109,7 @@ total_revision_2024 <- sum(revisions_2024$revision, na.rm = TRUE)
 # compare to historical patterns
 revision_by_year <- ces_combined |>
   group_by(year) |>
-  summarise(
+  summarise(#summarize stats in clean table
     total_annual_revision = sum(revision, na.rm = TRUE),
     mean_revision = mean(revision, na.rm = TRUE),
     mean_abs_revision = mean(abs_revision, na.rm = TRUE),
@@ -1108,9 +1119,10 @@ revision_by_year <- ces_combined |>
   )
 
 # show recent years
+# #show datatable
 revision_by_year |>
   filter(year >= 2020) |>
-  mutate(
+  mutate(#select these columns and format for 2020 and onwards
     Year = year,
     `Total Revision` = format(total_annual_revision, big.mark = ","),
     `Mean Revision` = round(mean_revision, 1),
@@ -1123,12 +1135,15 @@ revision_by_year |>
   datatable(
     rownames = FALSE,
     options = list(dom = 't', ordering = FALSE),
-    caption = "Annual Revision Patterns 2020-2025"
+    caption = "Annual Revision Patterns 2020-2025"#title
   )
 ```
 
 ```{r}
-#| label: factcheck2-test
+#| message: false
+#| warning: false
+#| fig-width: 12
+#| fig-height: 6
 #| code-fold: true
 
 # test if 2024 revisions are significantly different from pre-2024 average
@@ -1136,28 +1151,29 @@ test_2024_unusual <- ces_combined |>
   mutate(is_2024 = year == 2024) |>
   t_test(abs_revision ~ is_2024,
          order = c("TRUE", "FALSE"),
-         alternative = "two.sided")
+         alternative = "two.sided") #two sided t test
 
+#show data in clean datatable
 test_2024_unusual |>
   mutate(
     Test = "2024 Revisions vs Historical Average",
     `T-Statistic` = round(statistic, 3),
     `P-Value` = format.pval(p_value, digits = 3),
     `Mean Difference` = round(estimate, 2),
-    Conclusion = ifelse(p_value < 0.05,
-                       "2024 revisions ARE statistically unusual",
+    Conclusion = ifelse(p_value < 0.05, #p test threshold
+                       "2024 revisions ARE statistically unusual", #if else statement
                        "2024 revisions are NOT statistically unusual")
   ) |>
-  select(Test, `T-Statistic`, `P-Value`, `Mean Difference`, Conclusion) |>
+  select(Test, `T-Statistic`, `P-Value`, `Mean Difference`, Conclusion) |> #select these columns
   datatable(
     rownames = FALSE,
     options = list(dom = 't'),
-    caption = "Statistical Test: Are 2024 Revisions Unusual?"
+    caption = "Statistical Test: Are 2024 Revisions Unusual?" #title
   )
 ```
 This is also very easily to fact check and disprove. Total 2024 revisions were approximately **`r format(total_revision_2024, big.mark = ",")`** thousand, not "almost 900,000"
 
-"Rigged" implies intentional bias but statistical testing shows 2024 revisions are **not** unusual given that our p-value is **`r format(total_revision_2024, digits = 3)`**
+"Rigged" implies intentional bias but statistical testing shows 2024 revisions are **not** unusual given that our p-value is **`r format(p_value, digits = 3)`** and does not go below the threshold of 0.05
 
 It's important to note that revisions of similar magnitude occurred under both Democratic and Republican administrations, with no systematic partisan pattern. BLS revisions follow a regular schedule of being released every month, independent of elections. The revision process is transparent, methodologically sound, and overseen by career statisticians, making it apolitical.
 
@@ -1165,27 +1181,28 @@ The claim that revisions were "rigged" is completely false with no statistical o
 Our analysis concludes that this claim is pants on fire, in line with PolitiFact.
 
 ```{r}
-#| label: factcheck2-viz1
+#| message: false
+#| warning: false
 #| code-fold: true
 #| fig-width: 12
 #| fig-height: 6
 
 # plot total annual revisions over time
 ggplot(revision_by_year, aes(x = year, y = total_annual_revision)) +
-  geom_col(aes(fill = year == 2024), alpha = 0.8) +
+  geom_col(aes(fill = year == 2024), alpha = 0.8) + #fill in for 2024 only so its highlighted
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   geom_hline(yintercept = -900, linetype = "dashed", color = "red", linewidth = 1) +
   annotate("text", x = 1985, y = -900, 
            label = "Trump's claimed -900k", vjust = -0.5, size = 3.5, color = "red") +
-  scale_fill_manual(values = c("FALSE" = "gray70", "TRUE" = "coral"), guide = "none") +
+  scale_fill_manual(values = c("FALSE" = "gray70", "TRUE" = "coral"), guide = "none") + #color coordinadate 
   scale_y_continuous(labels = comma) +
-  scale_x_continuous(breaks = seq(1980, 2024, 5)) +
+  scale_x_continuous(breaks = seq(1980, 2024, 5)) + #x axis values
   theme_minimal() +
-  labs(
+  labs(#title subtitle x and y axis values
     title = "Total Annual CES Revisions 1979-2024",
     subtitle = "2024 highlighted; positive values = upward revisions, negative = downward",
-    x = "year",
-    y = "total annual revision (thousands)",
+    x = "Year",
+    y = "Total annual revision (thousands)",
     caption = "2024 revisions are within normal historical range"
   ) +
   theme(plot.title = element_text(face = "bold", size = 14))
@@ -1193,16 +1210,17 @@ ggplot(revision_by_year, aes(x = year, y = total_annual_revision)) +
 
 
 ```{r}
-#| label: factcheck2-viz2
+#| message: false
+#| warning: false
 #| code-fold: true
 #| fig-width: 12
 #| fig-height: 6
 
 # analyze revisions by party
 party_revisions <- ces_with_president |>
-  filter(!is.na(party)) |>
+  filter(!is.na(party)) |> #make sure not null
   group_by(party, president) |>
-  summarise(
+  summarise( #get stats - mean revision and mean absolute revision and total revision
     mean_revision = mean(revision, na.rm = TRUE),
     mean_abs_revision = mean(abs_revision, na.rm = TRUE),
     total_revision = sum(revision, na.rm = TRUE),
@@ -1210,24 +1228,26 @@ party_revisions <- ces_with_president |>
     .groups = "drop"
   )
 
+#plot data
 ggplot(party_revisions, aes(x = president, y = mean_revision, fill = party)) +
-  geom_col(alpha = 0.8) +
+  geom_col(alpha = 0.8) + #adjust transparency
   geom_hline(yintercept = 0, linetype = "dashed") +
   scale_fill_manual(
-    values = c("D" = "blue", "R" = "red"),
+    values = c("D" = "blue", "R" = "red"), #red for republicans and blue for dems
     labels = c("D" = "Democratic", "R" = "Republican"),
     name = "Party"
   ) +
   coord_flip() +
   theme_minimal() +
-  labs(
+  labs(#adjust title subttile axis and caption values
     title = "Average Monthly Revision by President",
-    subtitle = "positive values = upward revisions; negative = downward revisions",
+    subtitle = "Positive values = upward revisions; negative = downward revisions",
     x = "",
-    y = "average monthly revision (thousands)",
+    y = "Average monthly revision (thousands)",
     caption = "No systematic bias favoring or disfavoring either party"
   ) +
   theme(plot.title = element_text(face = "bold", size = 14))
 ```
 
+It's very easy to get swayed by numbers that sound correct. It's even easier to get convinced when someone confidently states something incorrect. In this day and age, it's very important to be vigilant and fact check politicians. Trust the data and statistics. Never trust a politician. 
 
