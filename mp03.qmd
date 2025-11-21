@@ -49,13 +49,13 @@ download_city_council_data <- function() {
     unzip(zip_path, exdir = unzip_dir)
   }
   
-  # specify the path to the shapefile (this may differ depending on how your directories are organized)
+  # specify the path to the shapefile
   path_to_shp <- "data/mp03/nycc/nycc_25c/nycc.shp"
   
   # read the shapefile
   nyc_council <- st_read(path_to_shp, quiet = TRUE)
   
-  # transform the coordinate system to wgs84 for consistency
+  # transform the coordinate system to wgs84 
   nyc_council <- st_transform(nyc_council, crs = "WGS84")
   
   # return the sf object
@@ -74,12 +74,17 @@ How does this dataset look like? It's a series of coordinates for each district
 #| 
 library(DT)
 library(sf)
+library(dplyr) 
 
 ## this shows the datapull in a more presentable table 
-nyc_districts <- download_city_council_data()
-# drop geometry for cleaner display
+# rename specific columns
 nyc_districts %>%
   st_drop_geometry() %>%
+  rename(
+    `District Number` = CounDist,
+    `Shape Area` = Shape_Area,
+    `Shape Length` = Shape_Leng
+  ) %>%
   datatable(
     options = list(pageLength = 10, scrollX = TRUE),
     caption = "NYC Council Districts"
@@ -264,6 +269,7 @@ nyc_trees <- download_nyc_tree_points()
 Now let's look at a subset of the trees data, plotted over NYC districts. For this, we will limit to 10,000 trees only.
 ```{r}
 #| code-fold: true
+#| cache: true
 #| code-summary: "Plot trees over districts"
 #| message: false
 #| warning: false
@@ -333,6 +339,7 @@ plot_nyc_trees(nyc_districts, nyc_trees, sample_size = 10000)
 ```
 Let's see what this looks like when you plot the entire trees data!
 ```{r}
+#| cache: true
 plot_nyc_trees(nyc_districts, nyc_trees, sample_size = NULL)
 ```
 
@@ -340,6 +347,7 @@ This is pretty dense. Below is an interactive chart where you can zoom in on spe
 ```{r}
 #| code-fold: true
 #| code-summary: "Interactive tree map with plotly"
+#| cache: true
 #| message: false
 #| warning: false
 

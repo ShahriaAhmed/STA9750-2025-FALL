@@ -9,6 +9,12 @@ format:
 # Install required packages if you don't have them
 # install.packages("RSocrata")
 # install.packages("dplyr")
+# 
+#| code-fold: true
+#| code-summary: "show historical jobs"
+#| message: false
+#| warning: false
+
 
 .libPaths("/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library/RSocrata")
 library(RSocrata)
@@ -45,6 +51,10 @@ head(df)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "show historical jobs"
+#| message: false
+#| warning: false
 library(dplyr)
 library(ggplot2)
 library(scales)
@@ -86,6 +96,12 @@ ggplot(complaint_summary %>% slice_max(count, n = 15),
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "show historical jobs"
+#| message: false
+#| warning: false
+
+
 # Aggregate by borough
 library(dplyr)
 library(ggplot2)
@@ -126,6 +142,12 @@ ggplot(borough_summary,
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "show historical jobs"
+#| message: false
+#| warning: false
+
+
 library(dplyr)
 library(ggplot2)
 library(scales)
@@ -166,6 +188,12 @@ ggplot(top5_location,
 ```
 
 ```{r fig.height=6, fig.width=8}
+#| code-fold: true
+#| code-summary: "show historical jobs"
+#| message: false
+#| warning: false
+
+
 library(dplyr)
 library(ggplot2)
 library(lubridate)
@@ -217,6 +245,11 @@ ggplot(borough_resolution, aes(x = reorder(borough, avg_resolution_days), y = av
 ```
 
 ```{r fig.height=9, fig.width=10}
+#| code-fold: true
+#| code-summary: "show historical jobs"
+#| message: false
+#| warning: false
+#| 
 # Install required packages if not already installed
 # install.packages("tidycensus")
 # install.packages("dplyr")
