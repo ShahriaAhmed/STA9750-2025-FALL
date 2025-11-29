@@ -1,17 +1,34 @@
 ---
-title: "Final Project"
+title: "311 Complaints Data"
 format: 
   html:
     code-fold: true
     code-summary: "Show code"
+    toc: true
+    toc-location: right
+    toc-depth: 3
+    smooth-scroll: true
+    anchor-sections: true
+    css: mp02.css
 ---
+
+Welcome to the final project for this semester. My group and I decided to look into 311 complaints data from OpenNYC. For context, 311 is a central hub for New Yorkers to file complaints that the city government responds to. These can range anywhere from heat/hot water issues to illegal parking or loud noises. Essentially, anything that is disturbing your quality of life can be raised to 311. 
+
+This is a core feature of a city. You wouldn't want to live somewhere with poor service. It shows that your government cares about you and your taxes are contributing to the overall wellbeing of your community. All the signs of a healthy city. 
+
+For our analysis, we wanted to see if there was a correlation between wealth and the quality of service you receive. Are wealthier neighborhoods better off? Does the city respond to their complaints faster than a poorer neighborhood? And thus, are all neighborhoods/boroughs created equal or do some get more preferential treatment than others? 
+
+To dive deeper, we used data from OpenNYC and data from the U.S. Census. The Census is a great way to estimate the median income of sub regions within NYC. Another indirect way to measure wealth is through property. Therefore, we relied on the property assessment dataset from OpenNYC as well. 
+
+It is important to note that 311 complaints are very frequent and therefore a huge dataset. An entire year's worth of data can span **6 million** rows and is very computationally heavy. For this project, we narrowed the timeframe down to just four months in order to make it more manageable. Our scope is the first four months of 2024, from January to April. This however will skew our analysis given that it is primarily during the winter season and we expect certain complaints to be higher than others. 
+
+To adjust for this, we can do a year over year analysis or get an entire year's worth of data, albeit limited for each month. Click on the code chunks below to expand or collapse code if you're following along. Use the navigation bar on the right to navigate through the analysis and policy brief. 
+
+
+### Initial Data Pull
 ```{r}
-# Install required packages if you don't have them
-# install.packages("RSocrata")
-# install.packages("dplyr")
-# 
 #| code-fold: true
-#| code-summary: "show historical jobs"
+#| code-summary: "OpenNYC 311 Complaints Data"
 #| message: false
 #| warning: false
 
@@ -19,312 +36,810 @@ format:
 .libPaths("/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library/RSocrata")
 library(RSocrata)
 library(dplyr)
+library(DT)
 
-# Define the file path where you'll save the data
+suppressPackageStartupMessages({
+  library(RSocrata)
+  library(dplyr)
+})
+
+# this is the name of the file that will be saved
 data_file <- "nyc_311_data_2024_jan_apr.rds"
-
-# Check if the file already exists
+#check if the file already exists
 if (file.exists(data_file)) {
-  # If it exists, just read it
-  cat("Loading existing Jan-Apr 2024 data from file...\n")
+  # if it exists, just read it, don't need to keep redownloading
   df <- readRDS(data_file)
 } else {
-  # If it doesn't exist, download it
-  cat("Downloading Jan-Apr 2024 data from NYC Open Data portal...\n")
-  cat("This may take several minutes...\n")
-  
-  # The API endpoint with first 4 months of 2024 filter
+  #otherwise conitnue and download
+
+  # API endpoint with first 4 months of 2024 filtered in URL
   url <- "https://data.cityofnewyork.us/resource/erm2-nwe9.json?$where=created_date>='2024-01-01T00:00:00' AND created_date<'2024-05-01T00:00:00'"
-  
-  # Download the data
+
+  # assign variable and download via rsocrata
   df <- read.socrata(url)
-  
   # Save to file
-  cat("Saving data to file...\n")
   saveRDS(df, data_file)
-  cat("Data saved successfully!\n")
+}
+#show first 1,000 rows in a nice, clean datatable
+datatable(head(df, 1000),
+          options = list(
+            pageLength = 10,
+            scrollX = TRUE,
+            autoWidth = TRUE
+          ),
+          filter = 'top',
+          class = 'cell-border stripe',
+          caption = "Showing first 1,000 rows of 311 complaints")
+```
+
+
+
+### Classification Modeling
+
+To make this project interesting and have real world applications, we decided to add in predictive analytics through machine learning. It started out with a simple question: Can we predict where a complaint came from (neighborhood) based on the complaint?  This can help us determine how long it will take for the complaint to be resolved since we know the average turnaround time for a borough. But this quickly proved difficult and we ran into problems, causing us to pivot three times. 
+
+To predict neighborhood from complaint data, we'll need to build a classification model. Randomforest is the one I’m most familiar with and have used in Python, so I thought it would be fairly straightforward to translate it over into R. For the first test, we pulled data from the 311 complaints dataset, narrowing the timeframe to the first four months of 2024. Just four months ended up having over one million rows. For the initial model, the borough was the target variable and the following columns were the features:
+
+- **complaint_type**
+- **descriptor**
+- **agency**
+- **open_data_channel_type**
+- **location_type**
+- **hour**
+- **day_of_week**
+- **month**
+- **is_weekend**
+
+How do we measure accuracy? Usually with regression models, you use R-squared which tells you how close the model was to the actual numbers. For classification models, we rely on accuracy or how often we are right (% of correct predictions). There are other metrics to evaluate them but for simplicity’s sake, I went with accuracy. The formula is below:
+
+**Accuracy = (True Positives + True Negatives) / (Total Predictions)**
+
+Using a randomforest classifier model and splitting the dataset into a training and testing set, I ran the model. This however was very disappointing, with a model accuracy of **38.46%**. There were some things we can do to improve the accuracy such as applying a k fold cross validation and grid search to find the optimal parameters for the model. However, this didn’t improve the outcome greatly. Ultimately, I wasn’t confident in saying that we can predict where the complaint came from with a **38%** accuracy. 
+```{r}
+#| code-fold: true
+#| code-summary: "Prepare data for prediction model"
+#| message: false
+#| warning: false
+#| eval: false
+
+
+library(dplyr)
+library(tidyr)
+library(lubridate)
+
+# this is the data wrangling part
+df_model <- df %>%
+  # we remove rows with missing target or key predictors
+  filter(!is.na(borough),
+         !is.na(complaint_type),
+         borough != "Unspecified") %>%
+
+  # take existing created date of complaint and break down hour, day, month. this allows for more granularity
+  mutate(
+    hour = hour(created_date),
+    day_of_week = wday(created_date, label = TRUE),
+    month = month(created_date, label = TRUE),
+    is_weekend = day_of_week %in% c("Sat", "Sun")
+  ) %>%
+  #predictive features
+  select(
+    # target variable
+    borough,
+    # features we use to predict target variable
+    complaint_type,
+    descriptor,
+    agency,
+    open_data_channel_type,
+    location_type,
+    hour,
+    day_of_week,
+    month,
+    is_weekend
+  ) %>%
+  # drop missing values
+  drop_na()
+
+# print class distribution
+table(df_model$borough) %>%
+  as.data.frame() %>%
+  arrange(desc(Freq)) %>%
+  print()
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Build Randomforest prediction model"
+#| message: false
+#| warning: false
+#| eval: false
+
+
+options(repos = c(CRAN = "https://cran.rstudio.com/")) #need CRAN otherwise we get error
+
+#install random forest and other modules as needed 
+if (!require("randomForest")) install.packages("randomForest")
+if (!require("caret")) install.packages("caret")
+if (!require("forcats")) install.packages("forcats")
+
+library(randomForest)
+library(caret)
+library(dplyr)
+library(forcats)  #fct_lump_n()
+
+set.seed(123)
+
+#which columns have too many categories
+sapply(df_model, function(x) length(unique(x))) %>%
+  sort(decreasing = TRUE) %>%
+  print()
+
+#keep only top 20-30 categories for high cardinality features
+df_model_prep <- df_model %>%
+  mutate(
+    #keep only top 30 complaint types, rest become Other
+    complaint_type = fct_lump_n(as.factor(complaint_type), n = 30),
+    #keep only top 30 descriptors
+    descriptor = fct_lump_n(as.factor(descriptor), n = 30),
+    #keep only top 20 location types
+    location_type = fct_lump_n(as.factor(location_type), n = 20),
+    # convert other character columns to factors
+    agency = as.factor(agency),
+    borough = as.factor(borough),
+    day_of_week = as.factor(day_of_week),
+    month = as.factor(month)
+  )
+
+# split into train/test using standard 80/20 ratio
+# use indexing to access and partition rows like in python
+train_index <- createDataPartition(df_model_prep$borough, p = 0.8, list = FALSE)
+train_data <- df_model_prep[train_index, ]
+test_data <- df_model_prep[-train_index, ]
+
+# train Randomforest model
+# sometimes model took over 2 hours to run, so limit to n rows to speed it up
+if(nrow(train_data) > 50000) {
+  train_sample <- train_data %>% sample_n(50000)
+} else {
+  train_sample <- train_data
 }
 
-# Now you can work with your data
-cat(sprintf("Data loaded: %d rows, %d columns\n", nrow(df), ncol(df)))
-head(df)
+#assign variable and run model
+rf_model <- randomForest(
+  borough ~ .,
+  data = train_sample,
+  ntree = 50, #100 ntrees was taking too long so I used 50
+  importance = TRUE,
+  na.action = na.omit
+)
+#make predictions
+predictions <- predict(rf_model, test_data)
+# confusion matrix for evaluating model
+confusion_matrix <- confusionMatrix(predictions, as.factor(test_data$borough))
+```
+
+
+What if we expand the timeframe? We can take _100,000 rows_ from each month and get a years worth of data for the model. The complaints from the first four months were primarily based on heat and hot water, which made sense given that it was during winter. But if we expanded to the rest of the year, complaints would balance out across the seasons. It would also give the model better quality data to predict on. So I reran the datapull, limiting to _100,000 rows_ for each months and reran the model. This resulted in a model accuracy of **39%** which was barely an improvement. 
+
+```{r}
+#| code-fold: true
+#| code-summary: "Download stratified sample of 2024 data"
+#| message: false
+#| warning: false
+#| eval: false
+
+#r socrata gives issues, so have to map out the path where it is downloaded so R can find it 
+.libPaths("/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library/RSocrata")
+library(RSocrata)
+library(dplyr)
+
+# i get alot of messages showing download progress. dont need it, so suppress it for now
+suppressPackageStartupMessages({
+  library(RSocrata)
+  library(dplyr)
+})
+
+# this is the name of the file that will be saved
+data_file <- "nyc_311_data_2024_stratified.rds"
+#check if the file already exists
+if (file.exists(data_file)) {
+  df_2024 <- readRDS(data_file) #if it exists, just read it. no need to redownload again
+} else {
+  # create empty list to store monthly dataframes and concat at the end
+  monthly_data_list <- list()
+  # for loop through each month of 2024
+  for(month in 1:12) {
+    #  reate date strings for the month
+    start_date <- sprintf("2024-%02d-01T00:00:00", month)
+    # calculate end date
+    if(month == 12) {
+      end_date <- "2025-01-01T00:00:00"
+    } else {
+      end_date <- sprintf("2024-%02d-01T00:00:00", month + 1)
+    }
+    # download data for each month using the start and end date, which store each months date in them.     # set limit to 100000 rows. this takes the first 100000 rows, its not fully random
+    url <- paste0(
+      "https://data.cityofnewyork.us/resource/erm2-nwe9.json?",
+      "$where=created_date>='", start_date, "' AND created_date<'", end_date, "'",
+      "&$limit=100000"  
+    )
+    #call socrata package
+    month_data <- read.socrata(url)
+    #store in list
+    monthly_data_list[[month]] <- month_data
+  }
+  #concact all lists into a dataframe 
+  df_2024 <- bind_rows(monthly_data_list)
+  #save to file
+  saveRDS(df_2024, data_file)
+}
+#print out stats
+df_2024 %>%
+  mutate(month = format(as.Date(created_date), "%Y-%m")) %>%
+  count(month) %>%
+  arrange(month) %>%
+  print()
 ```
 
 ```{r}
 #| code-fold: true
-#| code-summary: "show historical jobs"
+#| code-summary: "Prepare 2024 data for borough prediction"
 #| message: false
 #| warning: false
-library(dplyr)
-library(ggplot2)
-library(scales)
-library(stringr)
-
-# Aggregate by complaint_type
-complaint_summary <- df %>%
-  group_by(complaint_type) %>%
-  summarise(count = n()) %>%
-  arrange(desc(count))
-
-# Convert complaint_type to Title Case for readability
-complaint_summary <- complaint_summary %>%
-  mutate(complaint_type = str_to_title(complaint_type))
-
-# Plot top 15 complaint types with labels
-ggplot(complaint_summary %>% slice_max(count, n = 15),
-       aes(x = reorder(complaint_type, count), y = count)) +
-  geom_col(fill = "#2E86C1", width = 0.7) +
-  geom_text(aes(label = comma(count)),
-            hjust = -0.05, size = 3.5, family = "sans") +
-  coord_flip(clip = "off") +  # allow labels to go past plot area
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +
-  labs(
-    title = "Top 15 Complaint Types (Jan–Apr 2024)",
-    x = "Complaint Type",
-    y = "Number of Complaints"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    axis.title.x = element_text(margin = margin(t = 10)),
-    axis.title.y = element_text(margin = margin(r = 10)),
-    plot.margin = margin(10, 40, 10, 10)  # extra space on right for labels
-  )
-
-
-
-```
-
-```{r}
-#| code-fold: true
-#| code-summary: "show historical jobs"
-#| message: false
-#| warning: false
-
-
-# Aggregate by borough
-library(dplyr)
-library(ggplot2)
-library(scales)
-library(stringr)
-
-mako_colors <- c("#0D0887", "#6A00A8", "#B12A90", "#E16462", "#FCA636", "#F0F921")
-# Aggregate by borough
-borough_summary <- df %>%
-  group_by(borough) %>%
-  summarise(count = n()) %>%
-  arrange(desc(count)) %>%
-  mutate(borough = str_to_title(borough))  # title case
-
-# Plot
-ggplot(borough_summary,
-       aes(x = count, y = reorder(borough, count), fill = borough)) +
-  geom_col(width = 0.6, show.legend = FALSE) +
-  geom_text(aes(label = comma(count)),
-            hjust = -0.05, size = 4, family = "sans") +  # data labels
-  scale_fill_manual(values = mako_colors) +
-  scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +  # fix scientific notation
-  labs(
-    title = "311 Complaints by Borough (Jan–Apr 2024)",
-    x = "Number of Complaints",
-    y = "Borough"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    axis.title.x = element_text(margin = margin(t = 10)),
-    axis.title.y = element_text(margin = margin(r = 10)),
-    plot.margin = margin(10, 40, 10, 10)  # extra space for labels
-  ) +
-  coord_cartesian(clip = "off")  # allow data labels to extend past plot area
-
-
-```
-
-```{r}
-#| code-fold: true
-#| code-summary: "show historical jobs"
-#| message: false
-#| warning: false
-
+#| eval: false
 
 library(dplyr)
-library(ggplot2)
-library(scales)
-library(stringr)
-
-mako_colors <- c("#0D0887", "#6A00A8", "#B12A90", "#E16462", "#FCA636", "#F0F921")
-# Aggregate and get top 5 (largest counts first)
-top5_location <- df %>%
-  filter(!is.na(location_type)) %>%  # exclude NA
-  group_by(location_type) %>%
-  summarise(count = n()) %>%
-  slice_max(count, n = 5) %>%
-  mutate(location_type = str_to_title(location_type)) %>%
-  arrange(count)  # ascending for horizontal bars
-
-# Plot
-ggplot(top5_location,
-       aes(x = count, y = reorder(location_type, -count), fill = location_type)) +
-  geom_col(width = 0.6, show.legend = FALSE) +
-  geom_text(aes(label = comma(count)),
-            hjust = -0.05, size = 4, family = "sans") +
-  scale_fill_manual(values = mako_colors) +
-  scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +
-  labs(
-    title = "Top 5 Location Types (Jan–Apr 2024)",
-    x = "Number of Complaints",
-    y = "Location Type"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    axis.title.x = element_text(margin = margin(t = 10)),
-    axis.title.y = element_text(margin = margin(r = 10)),
-    plot.margin = margin(10, 40, 10, 10)
-  ) +
-  coord_cartesian(clip = "off")
-
-```
-
-```{r fig.height=6, fig.width=8}
-#| code-fold: true
-#| code-summary: "show historical jobs"
-#| message: false
-#| warning: false
-
-
-library(dplyr)
-library(ggplot2)
 library(lubridate)
-library(scales)
-library(stringr)
+library(tidyr)
 
-mako_colors <- c("#0D0887", "#6A00A8", "#B12A90", "#E16462", "#FCA636", "#F0F921")
-# Ensure date columns are in POSIXct format
-df <- df %>%
+#create features for borough prediction
+df_classification <- df_2024 %>%
+  # remove rows with missing borough
+  filter(!is.na(borough), borough != "Unspecified") %>%
+# take existing created date of complaint and break down hour, day, month. this allows for more granularity
   mutate(
-    created_date = ymd_hms(created_date, tz = "America/New_York"),
-    closed_date = ymd_hms(closed_date, tz = "America/New_York")
-  )
-
-# Create a new column: time to resolve in days
-df <- df %>%
-  mutate(
-    resolution_time_days = as.numeric(difftime(closed_date, created_date, units = "days"))
-  )
-
-# Remove NA or unspecified boroughs
-df_clean <- df %>% 
-  filter(!is.na(borough) & borough != "Unspecified" & !is.na(resolution_time_days))
-
-# Compute average resolution time by borough
-borough_resolution <- df_clean %>%
-  group_by(borough) %>%
-  summarise(avg_resolution_days = mean(resolution_time_days, na.rm = TRUE)) %>%
-  mutate(borough = str_to_title(borough))
-
-# Scatter plot
-ggplot(borough_resolution, aes(x = reorder(borough, avg_resolution_days), y = avg_resolution_days)) +
-  geom_point(size = 4, color = "#E74C3C") +
-  geom_text(aes(label = round(avg_resolution_days, 1)), 
-            vjust = -0.8, size = 4) +
-  scale_fill_manual(values = mako_colors) +
-  labs(
-    title = "Average Resolution Time by Borough (Days)",
-    x = "Borough",
-    y = "Average Resolution Time (Days)"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),  # centered title
-    axis.title.x = element_text(margin = margin(t = 10)),
-    axis.title.y = element_text(margin = margin(r = 10))
-  )
-
+    hour = hour(created_date),
+    day_of_week = wday(created_date, label = TRUE),
+    month = month(created_date, label = TRUE),
+    is_weekend = day_of_week %in% c("Sat", "Sun")
+  ) %>%
+  
+  # select relevant features
+  select(
+    borough,   # target variable
+    complaint_type,   # features we use to predict target variable
+    descriptor,
+    agency,
+    open_data_channel_type,
+    location_type,
+    hour,
+    day_of_week,
+    month,
+    is_weekend
+  ) %>%
+  # drop na
+  drop_na(complaint_type, agency)
+#print stats
+table(df_classification$borough) %>%
+  as.data.frame() %>%
+  arrange(desc(Freq)) %>%
+  print()
 ```
 
-```{r fig.height=9, fig.width=10}
+
+```{r}
 #| code-fold: true
-#| code-summary: "show historical jobs"
+#| code-summary: "Build Randomforest classification model on 2024 data"
+#| message: false
+#| warning: false
+#| eval: false
+
+options(repos = c(CRAN = "https://cran.rstudio.com/")) #need CRAN link or you get an error
+
+#install libraries if needed
+if (!require("randomForest")) install.packages("randomForest")
+if (!require("caret")) install.packages("caret")
+if (!require("forcats")) install.packages("forcats")
+
+library(randomForest)
+library(caret)
+library(dplyr)
+library(forcats)
+
+#seed for reproducibility 
+set.seed(123)
+
+# final modeling datasetand reduce number of values to 20-30
+df_model <- df_classification %>%
+  mutate(
+    complaint_type = fct_lump_n(as.factor(complaint_type), n = 30),
+    descriptor = fct_lump_n(as.factor(descriptor), n = 30),
+    location_type = fct_lump_n(as.factor(location_type), n = 20),
+    agency = as.factor(agency),
+    borough = as.factor(borough),
+    day_of_week = as.factor(day_of_week),
+    month = as.factor(month)
+  ) %>%
+  drop_na()
+
+# split into train/test using standard 80/20 ratio
+# use indexing to access and partition rows like in python
+train_index <- createDataPartition(df_model$borough, p = 0.8, list = FALSE)
+train_data <- df_model[train_index, ]
+test_data <- df_model[-train_index, ]
+# train Randomforest model
+# sometimes model took over 2 hours to run, so limit to n rows to speed it up
+if(nrow(train_data) > 100000) {
+  train_sample <- train_data %>% sample_n(100000)
+} else {
+  train_sample <- train_data
+}
+
+# train Randomforest model
+rf_model <- randomForest(
+  borough ~ .,
+  data = train_sample,
+  ntree = 50, #100 ntrees took way too long, limit to 50
+  importance = TRUE,
+  na.action = na.omit
+)
+
+#make predictions
+predictions <- predict(rf_model, test_data)
+#evaluate model with confusion matrix
+confusion_matrix <- confusionMatrix(predictions, as.factor(test_data$borough))
+cat("Overall Accuracy:", round(confusion_matrix$overall['Accuracy'] * 100, 2), "%\n\n")
+```
+
+
+
+I ended up pivoting a third time and using the 311 resolution satisfaction dataset instead. This was much smaller, **~436,000 rows**, and had a much longer time frame rather than the first four months. Having the resolution satisfaction data was useful as we can see satisfaction across the boroughs. But right away there was an issue: the satisfaction metric in this dataset was qualitative. It ranged from strongly agree to strongly disagree. Using conditional logic, we can assign a numerical value to each and then run the model.
+
+Running the Randomforest model through this yielded a model accuracy of **45.26%**.  Even with cross validation and gridsearch, we could not get a higher accuracy value. So for this project, we decided to keep it as is. 45% of the time, our model will accurately tell you which borough a complaint came from.
+
+# Exploratory Data Analysis
+```{r}
+#| code-fold: true
+#| code-summary: "Download 311 Satisfaction Survey Data"
+#| message: false
+#| warning: false
+
+#r socrata gives issues, so have to map out the path where it is downloaded so R can find it 
+.libPaths("/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library/RSocrata")
+library(RSocrata)
+library(dplyr)
+library(DT)
+
+#suppress download messages
+suppressPackageStartupMessages({
+  library(RSocrata)
+  library(dplyr)
+})
+
+# this is the file name of downloaded 
+data_file <- "nyc_311_satisfaction_survey.rds"
+
+#check if the file already exists
+if (file.exists(data_file)) {
+  #if it does, just read it. no need to redownload
+  df_satisfaction <- readRDS(data_file)
+} else {
+  #if it doesn't exist, download it
+  # API URL endpoint for satisfaction survey data
+  url <- "https://data.cityofnewyork.us/resource/5ijn-vbdv.json"
+  #download the data
+  df_satisfaction <- read.socrata(url)
+  # save to file
+  saveRDS(df_satisfaction, data_file)
+}
+
+# show first 1000 rows in nice clean datatable
+datatable(head(df_satisfaction, 1000),
+          options = list(
+            pageLength = 5,
+            scrollX = TRUE,
+            autoWidth = TRUE
+          ),
+          filter = 'top',
+          class = 'cell-border stripe',
+          caption = "Showing first 1,000 rows of 311 Satisfaction Survey data")
+```
+
+Before we run the model, we convert the categorical satisfaction metrics to numerical. Let's look at the total count of each satisfaction option.
+```{r}
+#| code-fold: true
+#| code-summary: "Data wrangling"
+#| message: false
+#| warning: false
+library(dplyr)
+library(DT)
+
+# create function to convert satisfaction text to numeric score
+convert_satisfaction_to_numeric <- function(satisfaction_text) {
+  case_when(
+    grepl("Strongly Agree|Very Satisfied|Strongly Satisfied", satisfaction_text, ignore.case = TRUE) ~ 5,
+    grepl("^Agree|^Satisfied", satisfaction_text, ignore.case = TRUE) ~ 4,
+    grepl("Neutral|Neither", satisfaction_text, ignore.case = TRUE) ~ 3,
+    grepl("Dissatisfied|^Disagree", satisfaction_text, ignore.case = TRUE) ~ 2,
+    grepl("Strongly Disagree|Strongly Dissatisfied|Very Dissatisfied", satisfaction_text, ignore.case = TRUE) ~ 1,
+    TRUE ~ NA_real_
+  )
+}
+# Create table of unique values in overall_satisfaction
+satisfaction_table <- as.data.frame(table(df_satisfaction$overall_satisfaction, useNA = "ifany"))
+colnames(satisfaction_table) <- c("Overall Satisfaction", "Unique Count")
+```
+
+```{r}
+#show data in clean formatted datatable
+datatable(satisfaction_table, 
+          options = list(pageLength = 10, dom = 't'),
+          rownames = FALSE) %>% formatCurrency('Unique Count', currency = "", interval = 3, mark = ",", digits = 0)
+```
+
+Once we remove missing values and clean up the data, we have a final dataframe that we can pass into the randomforest model
+```{r}
+#| code-fold: true
+#| code-summary: "Data wrangling"
 #| message: false
 #| warning: false
 #| 
-# Install required packages if not already installed
-# install.packages("tidycensus")
-# install.packages("dplyr")
-# install.packages("ggplot2")
-# install.packages("scales")
+#prepare modeling dataset
+df_model_satisfaction <- df_satisfaction %>%
+  #filter for rows with borough information
+  filter(!is.na(borough), borough != "Unspecified", borough != "") %>%
+  filter(!is.na(overall_satisfaction)) %>%
+  # convert satisfaction to numeric
+  mutate(
+    satisfaction_score = convert_satisfaction_to_numeric(overall_satisfaction),
+    #create numeric versions of year and month
+    year = as.numeric(year),
+    month = as.numeric(month)
+  ) %>%
+  # remove na
+  filter(!is.na(satisfaction_score))
 
-library(tidycensus)
-library(tigris)
-library(sf)
+# Create summary table
+summary_df <- df_model_satisfaction %>% 
+  select(borough, satisfaction_score, year, month) %>%
+  summary() %>%
+  as.data.frame() %>%
+  tidyr::separate(Freq, into = c("Statistic", "Value"), sep = ":", extra = "merge") %>%
+  select(Variable = Var2, Statistic, Value) %>%
+  filter(!is.na(Value))
+```
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Build classification model"
+#| message: false
+#| warning: false
+library(tidyr)
+library(DT)
+options(repos = c(CRAN = "https://cran.rstudio.com/")) #need CRAN link or you get error
+ 
+##install packages if needed
+if (!require("randomForest")) install.packages("randomForest")
+if (!require("caret")) install.packages("caret")
+if (!require("forcats")) install.packages("forcats")
+library(randomForest)
+library(caret)
 library(dplyr)
+library(forcats)
+
+#random number seed for reproducibility
+set.seed(123)
+
+#prepare final modeling dataset
+df_final <- df_model_satisfaction %>%
+  mutate(
+    #convert categorical variables to factors and reduce values to 50. randomforest is limited to 53 features
+    complaint_type = fct_lump_n(as.factor(complaint_type), n = 50),
+    descriptor = fct_lump_n(as.factor(descriptor), n = 50),
+    agency = as.factor(agency),
+    dissatisfaction_reason = fct_lump_n(as.factor(dissatisfaction_reason), n = 50),
+    borough = as.factor(borough)
+  ) %>%
+  select(borough, satisfaction_score, complaint_type, descriptor, agency,
+         dissatisfaction_reason, year, month) %>%
+  drop_na()
+
+# Borough distribution table
+borough_table <- as.data.frame(table(df_final$borough))
+colnames(borough_table) <- c("Borough", "Count")
+```
+
+Let's take a look at complaint distribution by borough. Brooklyn has the most complaints out of any borough! Nearly double the complaints of Manhattan!
+```{r}
+#| code-fold: true
+#| code-summary: "Borough distribution"
+#| message: false
+#| warning: false
 library(ggplot2)
-library(scales)
 
-# ---- 1. Set your Census API key ----
-census_api_key("ac91ffb3af86527f7a1a1334062d77454df470ed", install = TRUE, overwrite = TRUE)
-readRenviron("~/.Renviron")
+#plot compplaints distribution by borough
+ggplot(borough_table %>% arrange(desc(Count)), 
+       aes(x = reorder(Borough, Count), y = Count)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Complaint Distribution by Borough", #adjust title x and y values as needed
+       x = "Borough",
+       y = "Count of Complaints") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+```
 
-# ---- 2. Pull ACS median household income for NYC counties ----
-income_boro <- get_acs(
-  geography = "county",
-  variables = c(median_hh_income = "B19013_001E"),
-  state = "NY",
-  county = c("Bronx County", "Kings County", "New York County", "Queens County", "Richmond County"),
-  year = 2023,
-  survey = "acs5"
-) %>%
-  select(NAME, median_hh_income = estimate) %>%
-  # Map county names to boroughs for readability
-  mutate(borough = case_when(
-    NAME == "Bronx County, New York" ~ "Bronx",
-    NAME == "Kings County, New York" ~ "Brooklyn",
-    NAME == "New York County, New York" ~ "Manhattan",
-    NAME == "Queens County, New York" ~ "Queens",
-    NAME == "Richmond County, New York" ~ "Staten Island"
-  ))
 
-# ---- 3. Get NYC county shapefiles ----
-nyc_counties <- counties(state = "NY", cb = TRUE, class = "sf") %>%
-  filter(NAME %in% c("Bronx", "Kings", "New York", "Queens", "Richmond"))
+```{r}
+#| code-fold: true
+#| code-summary: "Build classification model"
+#| message: false
+#| warning: false
+#| 
 
-# ---- 4. Join ACS data to geometries ----
-# Map borough names back to county names for join
-income_boro <- income_boro %>%
-  mutate(NAME = case_when(
-    borough == "Manhattan" ~ "New York",
-    borough == "Brooklyn" ~ "Kings",
-    borough == "Bronx" ~ "Bronx",
-    borough == "Queens" ~ "Queens",
-    borough == "Staten Island" ~ "Richmond"
-  ))
+# Split into 80/20 standard training and test set. use indexing to access df rows 
+train_index <- createDataPartition(df_final$borough, p = 0.8, list = FALSE)
+train_data <- df_final[train_index, ]
+test_data <- df_final[-train_index, ]
 
-nyc_map_data <- nyc_counties %>%
-  left_join(income_boro, by = "NAME")
+#train Randomforest model
+rf_model <- randomForest(
+  borough ~ .,
+  data = train_data,
+  ntree = 100, #100 ntrees depth
+  importance = TRUE,
+  na.action = na.omit
+)
 
-# ---- 5. Define Mako-inspired palette ----
-mako_colors <- c("#0D0887", "#6A00A8", "#B12A90", "#E16462", "#FCA636")
+#make predictions
+predictions <- predict(rf_model, test_data)
+#evaluate model
+confusion_matrix <- confusionMatrix(predictions, test_data$borough)
+```
 
-# ---- 6. Plot the choropleth map ----
-ggplot(nyc_map_data) +
-  geom_sf(aes(fill = median_hh_income), color = "white") +
-  scale_fill_gradientn(
-    colors = mako_colors,
-    labels = comma,
-    name = "Median Household Income"
-  ) +
-  labs(
-    title = "Median Household Income by NYC Borough (2023 ACS 5-Year Estimates)"
+At last, we ran the model! How accurate is it? Not the best, but still better than our initial model 
+```{r}
+#| code-fold: true
+#| code-summary: "Model accuracy"
+#| message: false
+#| warning: false
+#| 
+# create model results summary table to show accuracy
+results_summary <- data.frame(
+  Metric = c("Model Accuracy", "Baseline (random guessing)", "Number of Boroughs"),
+  Value = c(
+    paste0(round(confusion_matrix$overall['Accuracy'] * 100, 2), "%"),
+    paste0(round(100 / length(unique(df_final$borough)), 2), "%"),
+    length(unique(df_final$borough))
+  )
+)
+
+#show in datable
+datatable(results_summary, 
+          options = list(pageLength = 10, dom = 't'),
+          rownames = FALSE)
+```
+
+
+Let's take a look at the confusion matrix below. It's a big confusing, but the simplest way to interpret this is that it shows where the model got it right vs. where it got confused. Diagonal values are correct values and anything outside are incorrect
+
+**Cell (Brooklyn, Manhattan) = 2,565** means the model predicted Brooklyn 2,565 times when it was actually Manhattan \
+**Cell (Queens, Queens) = 3,961** means the model correctly predicted Queens 3,961 times 
+```{r}
+#| code-fold: true
+#| code-summary: "Model evaluation"
+#| message: false
+#| warning: false
+
+# show confusion matrix as datatable
+confusion_df <- as.data.frame.matrix(confusion_matrix$table)
+confusion_df <- cbind(Predicted = rownames(confusion_df), confusion_df)
+
+#get the names of all numeric columns
+numeric_cols <- colnames(confusion_df)[colnames(confusion_df) != "Predicted"]
+
+#format datatable numbers in clean presentable way
+datatable(confusion_df, 
+          options = list(pageLength = 10, dom = 't'),
+          rownames = FALSE) %>% 
+  formatCurrency(numeric_cols, currency = "", interval = 3, mark = ",", digits = 0)
+```
+
+
+Which features were most important in helping the model predict which borough the complaint is from? Description followed by complaint type. It appears that certain boroughs have specific complaints. For this graph, we use a metric called MeanDecreaseGini which assesses how much a feature reduces uncertainty when making predictions.
+```{r}
+#| code-fold: true
+#| code-summary: "Visualize feature importance"
+#| message: false
+#| warning: false
+
+library(ggplot2)
+
+#put most important features in a nice datatable
+importance_df <- importance(rf_model) %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("Feature") %>%
+  arrange(desc(MeanDecreaseGini))
+
+#plot most important features in a nice formatted bargraph
+ggplot(importance_df,
+       aes(x = reorder(Feature, MeanDecreaseGini), y = MeanDecreaseGini)) +
+  geom_col(fill = "#0D0887") +
+  coord_flip() +
+  labs(#edit title subttile x and y axis names
+    title = "Which Features Best Predict Borough from Satisfaction Data?",
+    subtitle = "Higher values = more important for prediction",
+    x = "Feature",
+    y = "Importance Score"
   ) +
   theme_minimal(base_size = 12) +
   theme(
-    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
-    legend.title = element_text(face = "bold"),
-    axis.text = element_blank(),
-    axis.ticks = element_blank()
+    plot.title = element_text(face = "bold"),
+    plot.subtitle = element_text(size = 10)
+  )
+```
+
+Let's look at the number one complaint from each borough. Illegal parking is the biggest complaint type in Brooklyn and Queens. Imagine you are a homeowner and some random car is parked in your driveway. That's usually the case for a lot of residential areas and it drives people crazy. For Manhattan, we notice a lower number because there are fewer areas to park in a crowded borough.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Top complaints by borough"
+#| message: false
+#| warning: false
+library(dplyr)
+library(ggplot2)
+
+#get the top 3 complaint types for each borough
+top_complaints_by_borough <- df_final %>%
+  group_by(borough, complaint_type) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  group_by(borough) %>%
+  slice_max(order_by = count, n = 3) %>% #show top 3 by complaint count
+  ungroup() %>%
+  arrange(borough, desc(count)) %>%
+  mutate(complaint_type = factor(complaint_type))
+
+#create grouped bar chart
+ggplot(top_complaints_by_borough, 
+       aes(x = reorder(borough, -count), y = count, fill = complaint_type)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Top 3 Complaint Types by Borough", #adjust title x and y values
+       x = "Borough",
+       y = "Number of Complaints",
+       fill = "Complaint Type") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = 0))
+```
+
+As a last test of the Randomforest model, we'll take a random complaint and fill in all the necessary metrics. We already know which borough this complaint is from. Our goal here is to see if the model is able to correctly predict the borough.
+
+We have a section in the code chunk below where we can enter values for each complaint metric. The output below is a sample complaint:
+```{r}
+#| code-fold: true
+#| code-summary: "Borough Prediction"
+#| message: false
+#| warning: false
+library(dplyr)
+library(DT)
+
+# create function to predict borough based on input features
+predict_borough <- function(satisfaction_score, complaint_type, descriptor, 
+                           agency, dissatisfaction_reason, year, month) {
+  
+  # create input dataframe with proper factor levels from training data. we need a dataframe input otherwise model will return error
+  input_data <- data.frame( #these are the columns 
+    satisfaction_score = satisfaction_score, 
+    complaint_type = factor(complaint_type, levels = levels(train_data$complaint_type)),
+    descriptor = factor(descriptor, levels = levels(train_data$descriptor)),
+    agency = factor(agency, levels = levels(train_data$agency)),
+    dissatisfaction_reason = factor(dissatisfaction_reason, levels = levels(train_data$dissatisfaction_reason)),
+    year = year,
+    month = month
+  )
+  
+  # Make prediction
+  prediction <- predict(rf_model, input_data, type = "response")
+  probabilities <- predict(rf_model, input_data, type = "prob")
+  
+  # Create results dataframe -
+  results <- data.frame(
+    Borough = colnames(probabilities), #borough
+    Probability = as.numeric(probabilities[1,]) #respective probability of getting borough
+  ) %>%
+    arrange(desc(Probability)) %>%
+    mutate(Probability = paste0(round(Probability * 100, 2), "%"))
+  
+  return(list(
+    predicted_borough = as.character(prediction),
+    probabilities = results
+  ))
+}
+
+
+#Inputs: adjust these with manual inputs to replicate complaint
+user_satisfaction_score <- 1
+user_complaint_type <- "Blocked Driveway"
+user_descriptor <- "No Access"
+user_agency <- "NYPD"
+user_dissatisfaction_reason <- "The Agency did not correct the issue."
+user_year <- 2024
+user_month <- 1
+
+# make prediction based on every feature used
+example_prediction <- predict_borough(
+  satisfaction_score = user_satisfaction_score,
+  complaint_type = user_complaint_type,
+  descriptor = user_descriptor,
+  agency = user_agency,
+  dissatisfaction_reason = user_dissatisfaction_reason,
+  year = user_year,
+  month = user_month
+)
+
+#display sample complaint features in clean table
+input_summary <- data.frame(
+  Feature = c("Satisfaction Score", "Complaint Type", "Descriptor", 
+              "Agency", "Dissatisfaction Reason", "Year", "Month"),
+  Value = c(user_satisfaction_score, user_complaint_type, user_descriptor,
+            user_agency, user_dissatisfaction_reason, user_year, user_month)
+)
+
+datatable(input_summary, 
+          options = list(pageLength = 10, dom = 't'),
+          rownames = FALSE)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Filter specific complaint"
+#| message: false
+#| warning: false
+#| eval: false
+library(dplyr)
+library(DT)
+
+# filter for the exact complaint we want to use to test. we can plug this into the model to validate
+specific_complaint <- df_final %>%
+  filter(
+    borough == "BROOKLYN",
+    satisfaction_score == 1,
+    complaint_type == "Blocked Driveway",
+    descriptor == "No Access",
+    agency == "NYPD",
+    dissatisfaction_reason == "The Agency did not correct the issue.",
+    year == 2024,
+    month == 1
   )
 
+
+#show similar complaints from same borough
+similar_complaints <- df_final %>%
+  filter(
+    borough == "BROOKLYN",
+    complaint_type == "Blocked Driveway"
+  ) %>%
+  head(10)
+
+#format output in clean datatable
+datatable(specific_complaint, 
+          options = list(pageLength = 5, scrollX = TRUE),
+          rownames = FALSE)
+```
+
+
+This is a real complaint from Brooklyn. We know that average turnaround time is roughly **12 days** for a complaint from this borough. Where does our model predict the complaint came from? There's roughly a 45% that we will be accurate here. 
+```{r}
+cat("Predicted Borough:", example_prediction$predicted_borough, "\n\n")
+```
+
+Below is the model's probability of outputting a borough based on the complaint. 
+```{r}
+datatable(example_prediction$probabilities, 
+          options = list(pageLength = 10, dom = 't'),
+          rownames = FALSE)
 ```
 
