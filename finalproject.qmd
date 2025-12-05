@@ -24,7 +24,6 @@ It is important to note that 311 complaints are very frequent and therefore a hu
 
 To adjust for this, we can do a year over year analysis or get an entire year's worth of data, albeit limited for each month. Click on the code chunks below to expand or collapse code if you're following along. Use the navigation bar on the right to navigate through the analysis and policy brief. 
 
-
 ### Initial Data Pull
 ```{r}
 #| code-fold: true
@@ -72,13 +71,15 @@ datatable(head(df, 1000),
           caption = "Showing first 1,000 rows of 311 complaints")
 ```
 
-
-
 ### Classification Modeling
 
-To make this project interesting and have real world applications, we decided to add in predictive analytics through machine learning. It started out with a simple question: Can we predict where a complaint came from (neighborhood) based on the complaint?  This can help us determine how long it will take for the complaint to be resolved since we know the average turnaround time for a borough. But this quickly proved difficult and we ran into problems, causing us to pivot three times. 
+To make this project interesting and have real world applications, I decided to add in predictive analytics through machine learning. Often, in classes and at work, the majority of my time is spent on data cleaning, transformation and automation (building ETL pipelines). Very rarely do I get the chance to model data and rely on their predictive capabilities. Therefore, I wanted to use this project as a way to test out models in a new language: R.
 
-To predict neighborhood from complaint data, we'll need to build a classification model. Randomforest is the one I’m most familiar with and have used in Python, so I thought it would be fairly straightforward to translate it over into R. For the first test, we pulled data from the 311 complaints dataset, narrowing the timeframe to the first four months of 2024. Just four months ended up having over one million rows. For the initial model, the borough was the target variable and the following columns were the features:
+It started out with a simple question: Can we predict where a complaint came from (neighborhood) based on the complaint? This can help us determine how long it will take for the complaint to be resolved since we know the average turnaround time for a borough. But this quickly proved difficult and I ran into problems, causing me to pivot three times. 
+
+To predict neighborhood from complaint data, we'll need to build a classification model. Randomforest is the one I’m most familiar with and have used in Python, so I thought it would be fairly straightforward to translate it over into R. This is a supervised machine learning algorithm that can handle both regression (numerical ouput) and classification (categorical outputs). It also benefits from ensemble learning which means that it is composed of a number of smaller models (decision trees) that are aggregated together to get one final result. It's like having a group of people make a decision and taking the most popular answer out of the group
+
+For the first test, I pulled data from the 311 complaints dataset, narrowing the timeframe to the first four months of 2024. Just four months ended up having over one million rows. For the initial model, the borough was the target variable and the following columns were the features:
 
 - **complaint_type**
 - **descriptor**
@@ -94,7 +95,11 @@ How do we measure accuracy? Usually with regression models, you use R-squared wh
 
 **Accuracy = (True Positives + True Negatives) / (Total Predictions)**
 
+When training models, it's important to split data into training and testing batches. This lets the model get familiar with the training data and become efficient in predicting values in the test data. And therefore, when it comes across unfamiliar new datapoints, it can predict more accurately. 
+
 Using a randomforest classifier model and splitting the dataset into a training and testing set, I ran the model. This however was very disappointing, with a model accuracy of **38.46%**. There were some things we can do to improve the accuracy such as applying a k fold cross validation and grid search to find the optimal parameters for the model. However, this didn’t improve the outcome greatly. Ultimately, I wasn’t confident in saying that we can predict where the complaint came from with a **38%** accuracy. 
+
+The following code chunks show the initial model on the 311 complaints with a 38% accuracy
 ```{r}
 #| code-fold: true
 #| code-summary: "Prepare data for prediction model"
@@ -217,8 +222,7 @@ predictions <- predict(rf_model, test_data)
 confusion_matrix <- confusionMatrix(predictions, as.factor(test_data$borough))
 ```
 
-
-What if we expand the timeframe? We can take _100,000 rows_ from each month and get a years worth of data for the model. The complaints from the first four months were primarily based on heat and hot water, which made sense given that it was during winter. But if we expanded to the rest of the year, complaints would balance out across the seasons. It would also give the model better quality data to predict on. So I reran the datapull, limiting to _100,000 rows_ for each months and reran the model. This resulted in a model accuracy of **39%** which was barely an improvement. 
+What if we expand the timeframe? We can take _100,000 rows_ from each month and get a years worth of data for the model. The complaints from the first four months were primarily based on heat and hot water, which made sense given that it was during winter. But if we expanded to the rest of the year, complaints would balance out across the seasons. It would also give the model better quality data to predict on. So I reran the datapull, limiting to _100,000 rows_ for each months and reran the model. This resulted in a model accuracy of **39%** which was barely an improvement. Pretty disappointing.
 
 ```{r}
 #| code-fold: true
@@ -390,11 +394,9 @@ confusion_matrix <- confusionMatrix(predictions, as.factor(test_data$borough))
 cat("Overall Accuracy:", round(confusion_matrix$overall['Accuracy'] * 100, 2), "%\n\n")
 ```
 
+I ended up pivoting a third time and using the 311 resolution satisfaction dataset instead. This was much smaller, **~436,000 rows**, and had a much longer time frame rather than the first four months (spanning from 2022 to 2025). Having the resolution satisfaction data was useful as we can see satisfaction across the boroughs. One thing to note was that the satisfaction metric in this dataset was qualitative. It ranged from strongly agree to strongly disagree. Using conditional logic, I assigned a numerical value to each. This ranges from 1 being strongly disagree to 5 being strongly agree. From my experience, we would usually use some form of one hot encoding to convert categorical data to numerical for models. But I later learned that RandomForest models don't need this encoding as each tree splits on categories. I left it in the code however because I liked combining both regex and str_detect with conditions.   
 
-
-I ended up pivoting a third time and using the 311 resolution satisfaction dataset instead. This was much smaller, **~436,000 rows**, and had a much longer time frame rather than the first four months. Having the resolution satisfaction data was useful as we can see satisfaction across the boroughs. But right away there was an issue: the satisfaction metric in this dataset was qualitative. It ranged from strongly agree to strongly disagree. Using conditional logic, we can assign a numerical value to each and then run the model.
-
-Running the Randomforest model through this yielded a model accuracy of **45.26%**.  Even with cross validation and gridsearch, we could not get a higher accuracy value. So for this project, we decided to keep it as is. 45% of the time, our model will accurately tell you which borough a complaint came from.
+Running the Randomforest model through this yielded a model accuracy of **45.26%**. Despite numerous tests and data cleanups, I could not get a higher score. So for this project, we decided to keep it as is. 45% of the time, our model will accurately tell you which borough a complaint came from.
 
 # Exploratory Data Analysis
 ```{r}
@@ -443,24 +445,25 @@ datatable(head(df_satisfaction, 1000),
           class = 'cell-border stripe',
           caption = "Showing first 1,000 rows of 311 Satisfaction Survey data")
 ```
-
 Before we run the model, we convert the categorical satisfaction metrics to numerical. Let's look at the total count of each satisfaction option.
 ```{r}
 #| code-fold: true
 #| code-summary: "Data wrangling"
 #| message: false
 #| warning: false
+#| 
 library(dplyr)
 library(DT)
+library(stringr)
 
 # create function to convert satisfaction text to numeric score
 convert_satisfaction_to_numeric <- function(satisfaction_text) {
   case_when(
-    grepl("Strongly Agree|Very Satisfied|Strongly Satisfied", satisfaction_text, ignore.case = TRUE) ~ 5,
-    grepl("^Agree|^Satisfied", satisfaction_text, ignore.case = TRUE) ~ 4,
-    grepl("Neutral|Neither", satisfaction_text, ignore.case = TRUE) ~ 3,
-    grepl("Dissatisfied|^Disagree", satisfaction_text, ignore.case = TRUE) ~ 2,
-    grepl("Strongly Disagree|Strongly Dissatisfied|Very Dissatisfied", satisfaction_text, ignore.case = TRUE) ~ 1,
+    str_detect(satisfaction_text, regex("Strongly Agree|Very Satisfied|Strongly Satisfied", ignore_case = TRUE)) ~ 5,
+    str_detect(satisfaction_text, regex("^Agree|^Satisfied", ignore_case = TRUE)) ~ 4,
+    str_detect(satisfaction_text, regex("Neutral|Neither", ignore_case = TRUE)) ~ 3,
+    str_detect(satisfaction_text, regex("Dissatisfied|^Disagree", ignore_case = TRUE)) ~ 2,
+    str_detect(satisfaction_text, regex("Strongly Disagree|Strongly Dissatisfied|Very Dissatisfied", ignore_case = TRUE)) ~ 1,
     TRUE ~ NA_real_
   )
 }
@@ -570,7 +573,43 @@ ggplot(borough_table %>% arrange(desc(Count)),
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 ```
 
+Let's also look at the number one complaint from each borough. Illegal parking is the biggest complaint type in Brooklyn and Queens. Imagine you are a homeowner and some random car is parked in your driveway. That's usually the case for a lot of residential areas and it drives people crazy. For Manhattan, we notice a lower number because there are fewer areas to park in a crowded borough.
 
+```{r}
+#| code-fold: true
+#| code-summary: "Top complaints by borough"
+#| message: false
+#| warning: false
+library(dplyr)
+library(ggplot2)
+
+#get the top 3 complaint types for each borough
+top_complaints_by_borough <- df_final %>%
+  group_by(borough, complaint_type) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  group_by(borough) %>%
+  slice_max(order_by = count, n = 3) %>% #show top 3 by complaint count
+  ungroup() %>%
+  arrange(borough, desc(count)) %>%
+  mutate(complaint_type = factor(complaint_type))
+
+#create grouped bar chart
+ggplot(top_complaints_by_borough, 
+       aes(x = reorder(borough, -count), y = count, fill = complaint_type)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Top 3 Complaint Types by Borough", #adjust title x and y values
+       x = "Borough",
+       y = "Number of Complaints",
+       fill = "Complaint Type") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = 0))
+```
+# Running the Model
+
+The following code chunk splits the 311 resolution satisfaction dataset into training and testing sets using index partitioning. From here, we run the model using 100 decision trees. This means it is producing 100 trees and taking the most popular borough out of all of them. 
 ```{r}
 #| code-fold: true
 #| code-summary: "Build classification model"
@@ -607,7 +646,7 @@ At last, we ran the model! How accurate is it? Not the best, but still better th
 #| 
 # create model results summary table to show accuracy
 results_summary <- data.frame(
-  Metric = c("Model Accuracy", "Baseline (random guessing)", "Number of Boroughs"),
+  Metric = c("Model Accuracy", "Random Guessing", "Number of Boroughs"),
   Value = c(
     paste0(round(confusion_matrix$overall['Accuracy'] * 100, 2), "%"),
     paste0(round(100 / length(unique(df_final$borough)), 2), "%"),
@@ -621,8 +660,7 @@ datatable(results_summary,
           rownames = FALSE)
 ```
 
-
-Let's take a look at the confusion matrix below. It's a big confusing, but the simplest way to interpret this is that it shows where the model got it right vs. where it got confused. Diagonal values are correct values and anything outside are incorrect
+Let's take a look at the confusion matrix below. It's a big confusing, but the simplest way to interpret this is that it shows where the model got it right vs. where it got confused. Diagonal values are correct values and anything outside are incorrect. Ideally you want lower numbers outside and higher numbers diagonally.
 
 **Cell (Brooklyn, Manhattan) = 2,565** means the model predicted Brooklyn 2,565 times when it was actually Manhattan \
 **Cell (Queens, Queens) = 3,961** means the model correctly predicted Queens 3,961 times 
@@ -646,8 +684,7 @@ datatable(confusion_df,
   formatCurrency(numeric_cols, currency = "", interval = 3, mark = ",", digits = 0)
 ```
 
-
-Which features were most important in helping the model predict which borough the complaint is from? Description followed by complaint type. It appears that certain boroughs have specific complaints. For this graph, we use a metric called MeanDecreaseGini which assesses how much a feature reduces uncertainty when making predictions.
+Which features were most important in helping the model predict which borough the complaint is from? Description followed by complaint type. It appears that certain boroughs have specific complaints. For this graph, we use a metric called MeanDecreaseGini which assesses how much a feature reduces uncertainty when making predictions. A low Gini indicates that there is little to no confusion within a group and a model is able to accurately predict/sort a borough based on the features. Conversely, a high Gini indicates that the model has a hard time accurately predicting. We can see this in the complaints type and description features. These are open ended, specific and descriptive, allowing for more distinction between boroughs. Something like month is numeric and provides no significant detail in determining the borough.
 ```{r}
 #| code-fold: true
 #| code-summary: "Visualize feature importance"
@@ -678,41 +715,6 @@ ggplot(importance_df,
     plot.title = element_text(face = "bold"),
     plot.subtitle = element_text(size = 10)
   )
-```
-
-Let's look at the number one complaint from each borough. Illegal parking is the biggest complaint type in Brooklyn and Queens. Imagine you are a homeowner and some random car is parked in your driveway. That's usually the case for a lot of residential areas and it drives people crazy. For Manhattan, we notice a lower number because there are fewer areas to park in a crowded borough.
-
-```{r}
-#| code-fold: true
-#| code-summary: "Top complaints by borough"
-#| message: false
-#| warning: false
-library(dplyr)
-library(ggplot2)
-
-#get the top 3 complaint types for each borough
-top_complaints_by_borough <- df_final %>%
-  group_by(borough, complaint_type) %>%
-  summarise(count = n(), .groups = 'drop') %>%
-  group_by(borough) %>%
-  slice_max(order_by = count, n = 3) %>% #show top 3 by complaint count
-  ungroup() %>%
-  arrange(borough, desc(count)) %>%
-  mutate(complaint_type = factor(complaint_type))
-
-#create grouped bar chart
-ggplot(top_complaints_by_borough, 
-       aes(x = reorder(borough, -count), y = count, fill = complaint_type)) +
-  geom_col(position = "dodge") +
-  scale_y_continuous(labels = scales::comma) +
-  labs(title = "Top 3 Complaint Types by Borough", #adjust title x and y values
-       x = "Borough",
-       y = "Number of Complaints",
-       fill = "Complaint Type") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-        legend.position = "bottom",
-        axis.text.x = element_text(angle = 0))
 ```
 
 As a last test of the Randomforest model, we'll take a random complaint and fill in all the necessary metrics. We already know which borough this complaint is from. Our goal here is to see if the model is able to correctly predict the borough.
@@ -830,8 +832,7 @@ datatable(specific_complaint,
           rownames = FALSE)
 ```
 
-
-This is a real complaint from Brooklyn. We know that average turnaround time is roughly **12 days** for a complaint from this borough. Where does our model predict the complaint came from? There's roughly a 45% that we will be accurate here. 
+This is a real complaint from Brooklyn. We know that average turnaround time is roughly **12 days** for a complaint from this borough. Where does our model predict the complaint came from? There's roughly a 45% chance that we will be accurate here. 
 ```{r}
 cat("Predicted Borough:", example_prediction$predicted_borough, "\n\n")
 ```
@@ -842,4 +843,18 @@ datatable(example_prediction$probabilities,
           options = list(pageLength = 10, dom = 't'),
           rownames = FALSE)
 ```
+
+# Conclusion
+
+Overall, this was a very fun question to answer and made the project much more interesting than just standard data cleaning and visualization. It was very surprising to find out that wealth does not in fact lead to faster service in NYC. Based on census data, Manhattan is the wealthiest borough but receives service that takes the longest to resolve. In contrast, Brooklyn and Queens have their issues resolved relatively quickly. 
+Looking back on this project, there are several things I'd approach differently next time. First, I would spend more time finding datasets that have features/columns that are more descriptive. This played the biggest role in determining model outputs. Unfortunately columns such as month, year, dissatisfaction reasons don't have enough distinguishing elements to allow the model to zone in on a borough.
+
+I would also implement k-fold cross-validation to get a better evaluation of the model's performance rather than relying on a single train-test split. Another improvement would be conducting a grid search to systematically find the optimal hyperparameters instead of using default values or guessing. Unfortunately I was not sure how to do this in R. I would also like to make this interactive, allowing the user to input values and have the model return a predicted borough. 
+
+Despite these limitations, this project provided valuable insights into NYC's service delivery patterns and offered great hands-on experience with machine learning techniques. It challenged our initial assumptions and opened up interesting questions for future research and projects.
+
+Sources used: 
+
+1. https://www.datacamp.com/tutorial/random-forests-classifier-python 
+2. https://stats.stackexchange.com/questions/197827/how-to-interpret-mean-decrease-in-accuracy-and-mean-decrease-gini-in-random-fore 
 
