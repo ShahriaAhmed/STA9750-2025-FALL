@@ -71,6 +71,11 @@ datatable(head(df, 1000),
           caption = "Showing first 1,000 rows of 311 complaints")
 ```
 
+What does average resolution look like by borough? 
+<div style="text-align: center;">
+  <img src="images/resolutiontime.png" height = "500" width="800">
+</div>
+
 ### Classification Modeling
 
 To make this project interesting and have real world applications, I decided to add in predictive analytics through machine learning. Often, in classes and at work, the majority of my time is spent on data cleaning, transformation and automation (building ETL pipelines). Very rarely do I get the chance to model data and rely on their predictive capabilities. Therefore, I wanted to use this project as a way to test out models in a new language: R.
@@ -847,11 +852,13 @@ datatable(example_prediction$probabilities,
 # Conclusion
 
 Overall, this was a very fun question to answer and made the project much more interesting than just standard data cleaning and visualization. It was very surprising to find out that wealth does not in fact lead to faster service in NYC. Based on census data, Manhattan is the wealthiest borough but receives service that takes the longest to resolve. In contrast, Brooklyn and Queens have their issues resolved relatively quickly. 
-Looking back on this project, there are several things I'd approach differently next time. First, I would spend more time finding datasets that have features/columns that are more descriptive. This played the biggest role in determining model outputs. Unfortunately columns such as month, year, dissatisfaction reasons don't have enough distinguishing elements to allow the model to zone in on a borough.
+Looking back on this project, there are several things I'd approach differently next time. For improvement, I would spend more time finding datasets that have features/columns that are more descriptive. This played the biggest role in determining model outputs. Unfortunately columns such as month, year, dissatisfaction reasons don't have enough distinguishing elements to allow the model to zone in on a borough.
 
-I would also implement k-fold cross-validation to get a better evaluation of the model's performance rather than relying on a single train-test split. Another improvement would be conducting a grid search to systematically find the optimal hyperparameters instead of using default values or guessing. Unfortunately I was not sure how to do this in R. I would also like to make this interactive, allowing the user to input values and have the model return a predicted borough. 
+I later realized that both the 311 complaints and 311 complaints resolution satisfaction datasets have unique keys to join on. So I could have joined them and get more detail on the complaint itself via the former dataset, which would in turn create a stronger model. However, the 311 complaints dataset has millions of rows and I wasn't sure of the best way to search for the unique keys that also appear in the resolution dataset.
 
-Despite these limitations, this project provided valuable insights into NYC's service delivery patterns and offered great hands-on experience with machine learning techniques. It challenged our initial assumptions and opened up interesting questions for future research and projects.
+I would also implement k-fold cross-validation to get a better evaluation of the model's performance rather than relying on a single train-test split. Another improvement would be conducting a grid search to systematically find the optimal hyperparameters instead of using default values or guessing. Unfortunately I was not sure how to do this in R in a proper pipeline. I would also like to make this interactive, allowing the user to input values and have the model return a predicted borough. 
+
+Despite the  limitations, this project provided valuable insights into NYC's service delivery patterns, something that I didn't even think about before this class. It challenged my initial assumptions and opened up interesting questions for future research and projects.
 
 Sources used: 
 
