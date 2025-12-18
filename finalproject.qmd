@@ -851,7 +851,8 @@ datatable(example_prediction$probabilities,
 
 # Conclusion
 
-Overall, this was a very fun question to answer and made the project much more interesting than just standard data cleaning and visualization. It was very surprising to find out that wealth does not in fact lead to faster service in NYC. Based on census data, Manhattan is the wealthiest borough but receives service that takes the longest to resolve. In contrast, Brooklyn and Queens have their issues resolved relatively quickly. 
+Overall, this was a very fun question to answer and made the project much more interesting than just standard data cleaning and visualization. It was surprising to find out that wealth does not in fact lead to faster service in NYC but that geography plays a bigger role. Based on census data, Manhattan is the wealthiest borough but receives service that takes the second longest to resolve. In contrast, Brooklyn and Queens have their issues resolved relatively quickly. 
+
 Looking back on this project, there are several things I'd approach differently next time. For improvement, I would spend more time finding datasets that have features/columns that are more descriptive. This played the biggest role in determining model outputs. Unfortunately columns such as month, year, dissatisfaction reasons don't have enough distinguishing elements to allow the model to zone in on a borough.
 
 I later realized that both the 311 complaints and 311 complaints resolution satisfaction datasets have unique keys to join on. So I could have joined them and get more detail on the complaint itself via the former dataset, which would in turn create a stronger model. However, the 311 complaints dataset has millions of rows and I wasn't sure of the best way to search for the unique keys that also appear in the resolution dataset.

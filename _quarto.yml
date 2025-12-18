@@ -25,9 +25,14 @@ website:
       - text: "Project #4"
         href: mp04.qmd
       - text: "Final Project"
-        href: finalproject.qmd
+        menu:
+          - text: "Individual"
+            href: finalproject.qmd
+          - text: "Group"
+            href: GS01(1).qmd
       - icon: github
         href: https://github.com/ShahriaAhmed/STA9750-2025-FALL
+      
 format:
   html:
     theme: default
